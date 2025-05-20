@@ -18,14 +18,6 @@ PreferredSizeWidget buildNarrowAppBar(BuildContext context) {
     ),
     title: Text('Меню', style: theme.textTheme.titleMedium),
     actions: [
-      IconButton(
-        icon: const Icon(Icons.shopping_cart),
-        onPressed: () {
-          AutoRouter.of(context).push(CartRoute());
-        },
-        iconSize: 28,
-        tooltip: 'Корзина',
-      ),
       Flexible(
         child: IconButton(
           icon: const Icon(Icons.menu),
@@ -59,14 +51,6 @@ PreferredSizeWidget buildWideAppBar(BuildContext context) {
       },
     ),
     actions: [
-      IconButton(
-        icon: const Icon(Icons.shopping_cart, color: Colors.green),
-        onPressed: () {
-          context.router.push(const CartRoute());
-        },
-        iconSize: 28,
-        tooltip: 'Корзина',
-      ),
       TextButton(
         onPressed: () {}, 
         child: Text('Акции', style: theme.textTheme.titleSmall),

@@ -8,7 +8,6 @@ import '/core/repositories/services/jwt_tokens/jwt_tokens.dart';
 import '/core/repositories/restaraunt/products/products.dart';
 import '/core/repositories/restaraunt/carts/carts.dart';
 import '/core/hive/models/models.dart';
-import '/core/hive/models/header_boxes.dart';
 import '../bloc/menu_bloc.dart';
 import '../../products/product/widgets/widgets.dart';
 import '../widgets/app_bar.dart';
@@ -259,6 +258,31 @@ class _MenuScreenState extends State<MenuScreen> {
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
+              },
+            ),
+            
+            floatingActionButton: 
+            BlocBuilder<MenuBloc, MenuState>(
+              bloc: _menuBloc,
+              builder: (BuildContext context, MenuState state) {
+                final theme = Theme.of(context);
+                
+                if (state is MenuLoaded) {
+                  return SizedBox(
+                    width: 90.0,
+                    height: 90.0,
+                    child: FloatingActionButton(
+                      onPressed: () {
+                        context.router.push(const CartRoute());
+                      },
+                      backgroundColor: theme.primaryColor,
+                      tooltip: 'Корзина',
+                      child: const Icon(Icons.shopping_cart, size: 50.0, color: Colors.white),
+                    ),
+                  );
+                } else {
+                  return Container();
+                }
               },
             ),
           );

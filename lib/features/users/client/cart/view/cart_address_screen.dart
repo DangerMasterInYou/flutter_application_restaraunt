@@ -16,6 +16,8 @@ class _CartAddressScreenState extends State<CartAddressScreen> {
   final _entranceController = TextEditingController();
   final _floorController = TextEditingController();
   final _commentController = TextEditingController();
+  
+  bool _addressValidated = false;
 
   @override
   void dispose() {
@@ -27,9 +29,16 @@ class _CartAddressScreenState extends State<CartAddressScreen> {
     _commentController.dispose();
     super.dispose();
   }
+  
+  void _onAddressValidated() {
+    setState(() {
+      _addressValidated = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Form(
@@ -39,44 +48,25 @@ class _CartAddressScreenState extends State<CartAddressScreen> {
           children: [
             Text(
               'Адрес доставки',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: theme.textTheme.titleLarge,
             ),
             const SizedBox(height: 24),
             
-            TextFormField(
-              controller: _streetController,
-              decoration: const InputDecoration(
-                labelText: 'Улица',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.location_on),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Пожалуйста, введите улицу';
-                }
-                return null;
-              },
+            YandexMapWidget(
+              streetController: _streetController,
+              houseController: _houseController,
+              apartmentController: _apartmentController,
+              entranceController: _entranceController,
+              floorController: _floorController,
+              commentController: _commentController,
+              formKey: _formKey,
+              onAddressValidated: _onAddressValidated,
             ),
-            const SizedBox(height: 16),
+            
+            const SizedBox(height: 24),
             
             Row(
               children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _houseController,
-                    decoration: const InputDecoration(
-                      labelText: 'Дом',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Введите номер дома';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
                 Expanded(
                   child: TextFormField(
                     controller: _apartmentController,
@@ -84,14 +74,10 @@ class _CartAddressScreenState extends State<CartAddressScreen> {
                       labelText: 'Квартира/Офис',
                       border: OutlineInputBorder(),
                     ),
+                    style: theme.textTheme.labelSmall,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            Row(
-              children: [
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextFormField(
                     controller: _entranceController,
@@ -99,9 +85,10 @@ class _CartAddressScreenState extends State<CartAddressScreen> {
                       labelText: 'Подъезд',
                       border: OutlineInputBorder(),
                     ),
+                    style: theme.textTheme.labelSmall,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextFormField(
                     controller: _floorController,
@@ -109,10 +96,13 @@ class _CartAddressScreenState extends State<CartAddressScreen> {
                       labelText: 'Этаж',
                       border: OutlineInputBorder(),
                     ),
+                    keyboardType: TextInputType.number,
+                    style: theme.textTheme.labelSmall,
                   ),
                 ),
               ],
             ),
+            
             const SizedBox(height: 16),
             
             TextFormField(
@@ -123,7 +113,9 @@ class _CartAddressScreenState extends State<CartAddressScreen> {
                 prefixIcon: Icon(Icons.comment),
               ),
               maxLines: 3,
+              style: theme.textTheme.labelSmall,
             ),
+            
             const SizedBox(height: 24),
             
             Row(
@@ -144,6 +136,22 @@ class _CartAddressScreenState extends State<CartAddressScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
+                        if (!_addressValidated) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Пожалуйста, подтвердите адрес')),
+                          );
+                          return;
+                        }
+                        
+                        final addressData = {
+                          'address': _streetController.text + ', ' + _houseController.text,
+                          'apartment': _apartmentController.text,
+                          'entrance': _entranceController.text,
+                          'floor': _floorController.text,
+                          'comment': _commentController.text,
+                        };
+                        
+                        print('Данные адреса: $addressData');
                         context.router.navigate(const CartPaymentRoute());
                       }
                     },

@@ -22,7 +22,7 @@ import 'app.dart';
 import 'dart:io' show Platform;
 
 void main() async {
-  // await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: ".env");
   // final apiSiteUrl = dotenv.env['API_SITE_URL'] ?? 'http://127.0.0.1:8000';
   final apiSiteUrl = 'http://127.0.0.1:8000';
 
