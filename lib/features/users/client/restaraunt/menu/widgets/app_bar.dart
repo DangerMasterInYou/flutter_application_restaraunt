@@ -18,6 +18,13 @@ PreferredSizeWidget buildNarrowAppBar(BuildContext context) {
     ),
     title: Text('Меню', style: theme.textTheme.titleMedium),
     actions: [
+      IconButton(
+        icon: const Icon(Icons.person),
+        onPressed: () {
+          context.router.push(const ProfileRoute());
+        },
+        tooltip: 'Профиль',
+      ),
       Flexible(
         child: IconButton(
           icon: const Icon(Icons.menu),
@@ -70,6 +77,13 @@ PreferredSizeWidget buildWideAppBar(BuildContext context) {
           '+79897035866',
           style: theme.textTheme.titleLarge,
         ),
+      ),
+      IconButton(
+        icon: const Icon(Icons.person),
+        onPressed: () {
+          context.router.push(const ProfileRoute());
+        },
+        tooltip: 'Профиль',
       ),
       const SizedBox(width: 16),
     ],

@@ -54,7 +54,7 @@ class _CartItemsScreenState extends State<CartItemsScreen> {
                   Text('Ваша корзина пуста', style: theme.textTheme.titleLarge),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () => context.router.popForced(),
+                    onPressed: () => context.router.pushNamed('/menu'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
@@ -81,10 +81,13 @@ class _CartItemsScreenState extends State<CartItemsScreen> {
                     return CartTileCard(
                       cart: cart,
                       onSubtractToBacket: () {
-                        //_cartBloc.add(SubtractItemFromCart(cart: cart));
+                        _cartBloc.add(SubtractFromCart(cart: cart));
                       },
                       onAddToBacket: () {
-                        //_cartBloc.add(AddItemToCart(cart: cart));
+                        _cartBloc.add(AddToCart(cart: cart));
+                      },
+                      onDeleteFromBacket: () {
+                        _cartBloc.add(DeleteItemFromCart(cart: cart));
                       },
                     );
                   },

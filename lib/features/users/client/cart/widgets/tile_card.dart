@@ -9,12 +9,14 @@ class CartTileCard extends StatelessWidget {
     super.key, 
     required this.cart, 
     required this.onSubtractToBacket, 
-    required this.onAddToBacket
+    required this.onAddToBacket,
+    required this.onDeleteFromBacket,
   });
 
   final Cart cart;
   final VoidCallback onSubtractToBacket;
   final VoidCallback onAddToBacket;
+  final VoidCallback onDeleteFromBacket;
   
   @override
   Widget build(BuildContext context) {
@@ -110,8 +112,7 @@ class CartTileCard extends StatelessWidget {
                           ),
                           IconButton(
                             icon: const Icon(Icons.close, color: Colors.white54, size: 20),
-                            onPressed: () {
-                            },
+                            onPressed: onDeleteFromBacket,
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
                               minWidth: 24,

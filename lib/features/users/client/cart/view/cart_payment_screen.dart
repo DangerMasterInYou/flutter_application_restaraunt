@@ -25,12 +25,15 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
           const SizedBox(height: 24),
           
           Card(
+
+            color: Colors.black,
+            surfaceTintColor: Colors.white,
             margin: EdgeInsets.zero,
             child: Column(
               children: [
                 RadioListTile<String>(
-                  title: const Text('Наличными курьеру'),
-                  subtitle: const Text('Оплата при получении заказа'),
+                  title: const Text('Самовывоз', style: TextStyle(color: Colors.white)),
+                  subtitle: const Text('Оплата при получении заказа', style: TextStyle(color: Colors.grey)),
                   value: 'cash',
                   groupValue: _selectedPaymentMethod,
                   onChanged: (value) {
@@ -41,20 +44,8 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
                 ),
                 const Divider(height: 1),
                 RadioListTile<String>(
-                  title: const Text('Картой курьеру'),
-                  subtitle: const Text('Оплата картой при получении'),
-                  value: 'card',
-                  groupValue: _selectedPaymentMethod,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedPaymentMethod = value!;
-                    });
-                  },
-                ),
-                const Divider(height: 1),
-                RadioListTile<String>(
-                  title: const Text('Онлайн оплата'),
-                  subtitle: const Text('Банковской картой через интернет'),
+                  title: const Text('Онлайн оплата', style: TextStyle(color: Colors.white)),
+                  subtitle: const Text('Банковской картой через интернет', style: TextStyle(color: Colors.grey)),
                   value: 'online',
                   groupValue: _selectedPaymentMethod,
                   onChanged: (value) {
@@ -70,6 +61,7 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
           const SizedBox(height: 24),
           
           Card(
+            color: Colors.black,
             margin: EdgeInsets.zero,
             child: Padding(
               padding: const EdgeInsets.all(16.0),

@@ -1,8 +1,9 @@
 import 'package:auto_route/auto_route.dart';
-import '../../features/users/client/restaraunt/menu/view/menu_screen.dart';
-import '../../features/users/client/restaraunt/products/product/view/product_screen.dart';
+import '/features/users/client/restaraunt/menu/view/menu_screen.dart';
+import '/features/users/client/restaraunt/products/product/view/product_screen.dart';
 import '/features/auth/login/view/login_screen.dart';
 import '/features/users/client/cart/view/cart_screen.dart';
+import '/features/users/client/profile/view/profile_screen.dart';
 import 'package:flutter/material.dart';
 
 part 'router.gr.dart';
@@ -14,7 +15,7 @@ class AppRouter extends _$AppRouter {
     AutoRoute(page: MenuRoute.page, path: '/menu', initial: true),
     AutoRoute(page: LoginRoute.page, path: '/login'),
     AutoRoute(page: ProductRoute.page, path: '/product/:productId'),
-    // AutoRoute(page: CartRoute.page, path: '/cart'),
+    AutoRoute(page: ProfileRoute.page, path: '/profile'),
     AutoRoute(
       path: '/cart',
       page: CartRoute.page,

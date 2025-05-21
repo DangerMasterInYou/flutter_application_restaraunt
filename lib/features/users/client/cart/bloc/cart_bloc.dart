@@ -12,9 +12,9 @@ part 'cart_state.dart';
 class CartBloc extends Bloc<CartEvent, CartState> {
   CartBloc(this.cartsRepository) : super(CartInitial()) {
     on<LoadCartList>(_load);
-    on<RemoveFromCart>(_removeFromCart);
     on<AddToCart>(_addToCart);
     on<SubtractFromCart>(_subtractFromCart);
+    on<DeleteItemFromCart>(_deleteFromCart);
   }
 
   final AbstractCartsRepository cartsRepository;
@@ -37,12 +37,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     }
   }
 
-  Future<void> _removeFromCart(
-    RemoveFromCart event,
+  Future<void> _deleteFromCart(
+    DeleteItemFromCart event,
     Emitter<CartState> emit,
   ) async {
     try {
-      await cartsRepository.postDeleteItemCart(event.item);
+      await cartsRepository.postDeleteItemCart(event.cart);
       add(LoadCartList());
     } catch (e, st) {
       GetIt.I<Talker>().handle(e, st);
@@ -55,8 +55,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     try {
-      await cartsRepository.postAddItemCart(event.item);
-      
+      await cartsRepository.postAddItemCart(event.cart);
       add(LoadCartList());
     } catch (e, st) {
       GetIt.I<Talker>().handle(e, st);
@@ -69,8 +68,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     try {
-      await cartsRepository.postSubtractItemCart(event.item);
-      
+      await cartsRepository.postSubtractItemCart(event.cart);
       add(LoadCartList());
     } catch (e, st) {
       GetIt.I<Talker>().handle(e, st);

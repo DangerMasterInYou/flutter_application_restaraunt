@@ -42,6 +42,8 @@ void main() async {
 
     await Hive.initFlutter();
     
+    await Hive.deleteFromDisk();
+    
     Hive.registerAdapter(UidManagerAdapter());
     final uidManagerBox = await Hive.openBox<Token>(HiveHeaders.uidManagerNameBox);
     
@@ -49,11 +51,12 @@ void main() async {
     final tokenBox = await Hive.openBox<Token>(HiveHeaders.tokensNameBox);
     
     Hive.registerAdapter(ProductAdapter());
+    final productsBox = await Hive.openBox<Product>(HiveHeaders.productsNameBox);
+  
+    Hive.registerAdapter(ProfileAdapter());
+    final profilesBox = await Hive.openBox<Profile>(HiveHeaders.profilesNameBox);
     
     Hive.registerAdapter(CategoryAdapter());
-    
-    final productsBox = await Hive.openBox<Product>(HiveHeaders.productsNameBox);
-    
     
     Hive.registerAdapter(CartAdapter());
     final cartsBox = await Hive.openBox<Cart>(HiveHeaders.cartsNameBox);
@@ -106,6 +109,14 @@ void main() async {
       JWTTokensRepository(
         dio: dio,
         tokenBox: tokenBox,
+        apiSiteUrl: apiSiteUrl,
+      ),
+    );
+    
+    GetIt.I.registerSingleton<AbstractProfilesRepository>(
+      ProfilesRepository(
+        dio: dio,
+        profilesBox: profilesBox,
         apiSiteUrl: apiSiteUrl,
       ),
     );
