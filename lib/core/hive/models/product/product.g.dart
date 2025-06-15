@@ -69,7 +69,7 @@ class ProductAdapter extends TypeAdapter<Product> {
 
 class CategoryAdapter extends TypeAdapter<Category> {
   @override
-  final int typeId = 7;
+  final int typeId = 4;
 
   @override
   Category read(BinaryReader reader) {

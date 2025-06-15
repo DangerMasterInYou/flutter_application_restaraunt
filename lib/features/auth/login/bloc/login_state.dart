@@ -12,8 +12,26 @@ class LoginLoading extends LoginState {
   List<Object?> get props => [];
 }
 
-class LoginLoaded extends LoginState {
-  LoginLoaded({
+class VerificationCodeSentSuccess extends LoginState {
+  final String email;
+  VerificationCodeSentSuccess({required this.email});
+  @override
+  List<Object?> get props => [email];
+}
+
+class VerificationCodeSentFailure extends LoginState {
+  VerificationCodeSentFailure({
+    this.exception,
+  });
+
+  final Object? exception;
+
+  @override
+  List<Object?> get props => [exception];
+}
+
+class LoginSuccess extends LoginState {
+  LoginSuccess({
     required this.token,
   });
   
@@ -24,12 +42,34 @@ class LoginLoaded extends LoginState {
 }
 
 class LoginFailure extends LoginState {
+  final String email;
+  final Object? exception;
+  final int attemptsLeft;
   LoginFailure({
+    required this.email,
     this.exception,
+    this.attemptsLeft = 5,
   });
 
-  final Object? exception;
+  @override
+  List<Object?> get props => [email, exception, attemptsLeft];
+}
+
+class LoginBlocked extends LoginState {
+  final DateTime blockUntil;
+  LoginBlocked({required this.blockUntil});
 
   @override
-  List<Object?> get props => [exception];
+  List<Object?> get props => [blockUntil];
+}
+
+class LoginLoaded extends LoginState {
+  LoginLoaded({
+    required this.token,
+  });
+  
+  final Token token;
+
+  @override
+  List<Object?> get props => [token];
 }

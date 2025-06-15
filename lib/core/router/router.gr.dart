@@ -51,16 +51,22 @@ abstract class _$AppRouter extends RootStackRouter {
         child: const MenuScreen(),
       );
     },
+    OrdersRoute.name: (routeData) {
+      return AutoRoutePage<dynamic>(
+        routeData: routeData,
+        child: const OrdersScreen(),
+      );
+    },
     ProductRoute.name: (routeData) {
       final pathParams = routeData.inheritedPathParams;
       final args = routeData.argsAs<ProductRouteArgs>(
-          orElse: () =>
-              ProductRouteArgs(productId: pathParams.getInt('productId')));
+          orElse: () => ProductRouteArgs(
+              productName: pathParams.getString('productName')));
       return AutoRoutePage<dynamic>(
         routeData: routeData,
         child: ProductScreen(
           key: args.key,
-          productId: args.productId,
+          productName: args.productName,
         ),
       );
     },
@@ -158,19 +164,33 @@ class MenuRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [OrdersScreen]
+class OrdersRoute extends PageRouteInfo<void> {
+  const OrdersRoute({List<PageRouteInfo>? children})
+      : super(
+          OrdersRoute.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'OrdersRoute';
+
+  static const PageInfo<void> page = PageInfo<void>(name);
+}
+
+/// generated route for
 /// [ProductScreen]
 class ProductRoute extends PageRouteInfo<ProductRouteArgs> {
   ProductRoute({
     Key? key,
-    required int productId,
+    required String productName,
     List<PageRouteInfo>? children,
   }) : super(
           ProductRoute.name,
           args: ProductRouteArgs(
             key: key,
-            productId: productId,
+            productName: productName,
           ),
-          rawPathParams: {'productId': productId},
+          rawPathParams: {'productName': productName},
           initialChildren: children,
         );
 
@@ -183,16 +203,16 @@ class ProductRoute extends PageRouteInfo<ProductRouteArgs> {
 class ProductRouteArgs {
   const ProductRouteArgs({
     this.key,
-    required this.productId,
+    required this.productName,
   });
 
   final Key? key;
 
-  final int productId;
+  final String productName;
 
   @override
   String toString() {
-    return 'ProductRouteArgs{key: $key, productId: $productId}';
+    return 'ProductRouteArgs{key: $key, productName: $productName}';
   }
 }
 

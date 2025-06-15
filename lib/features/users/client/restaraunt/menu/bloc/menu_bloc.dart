@@ -6,8 +6,8 @@ import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
-import '/core/repositories/restaraunt/products/products.dart';
-import '/core/repositories/restaraunt/carts/carts.dart';
+import '/core/repositories/users/client/restaraunt/products/products.dart';
+import '/core/repositories/users/client/restaraunt/carts/carts.dart';
 import '/core/hive/models/models.dart';
 
 import '/core/hive/models/token/token.dart';
@@ -33,17 +33,17 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
     try {
       emit(MenuLoading());
       
-      bool isTokenValid = false;
-      try {
-        isTokenValid = await _withTimeout(
-          jwtTokensRepository.getCheckJWTTokens(),
-          const Duration(seconds: 5),
-          'Token validation timeout'
-        );
-      } catch (e, st) {
-        GetIt.I<Talker>().handle(e, st);
-        isTokenValid = false;
-      }
+      // bool isTokenValid = false;
+      // try {
+      //   isTokenValid = await _withTimeout(
+      //     jwtTokensRepository.getCheckJWTTokens(),
+      //     const Duration(seconds: 5),
+      //     'Token validation timeout'
+      //   );
+      // } catch (e, st) {
+      //   GetIt.I<Talker>().handle(e, st);
+      //   isTokenValid = false;
+      // }
       
       // if (!isTokenValid) {
       //   emit(LoginInvalid());
@@ -57,6 +57,9 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
           const Duration(seconds: 5),
           'Products list fetch timeout'
         );
+        if (productsList.isEmpty) {
+          throw Exception('No products found');
+        }
       } catch (e, st) {
         GetIt.I<Talker>().handle(e, st);
         throw Exception('Failed to load menu items: $e');

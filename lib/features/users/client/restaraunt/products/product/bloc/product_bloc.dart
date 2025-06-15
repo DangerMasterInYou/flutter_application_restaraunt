@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
-import '/core/repositories/restaraunt/products/products.dart';
+import '/core/repositories/users/client/restaraunt/products/products.dart';
 
 part 'product_event.dart';
 part 'product_state.dart';
@@ -25,7 +25,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       if (state is! ProductLoaded) {
         emit(ProductLoading());
       }
-      final product = await productsRepository.getProduct(event.productId);
+      final product = await productsRepository.getProduct(event.productName);
       emit(ProductLoaded(product: product));
     } catch (e, st) {
       emit(ProductLoadingFailure(exception: e));

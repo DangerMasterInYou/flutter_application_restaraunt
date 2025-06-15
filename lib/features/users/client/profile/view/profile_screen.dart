@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
-import '/core/repositories/profile/profile.dart';
+import '/core/repositories/users/client/profile/profile.dart';
 import '../bloc/profile_bloc.dart';
 import '../widgets/widgets.dart';
 
@@ -37,7 +37,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Профиль'),
+        automaticallyImplyLeading: false,
+        title: Center(child: const Text('Профиль', style: TextStyle(fontSize: 40))),
       ),
       body: BlocProvider.value(
         value: _profileBloc,

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'package:flutter/material.dart';
@@ -19,12 +19,10 @@ import 'core/core.dart';
 import 'app.dart';
 
 
-import 'dart:io' show Platform;
-
 void main() async {
   await dotenv.load(fileName: ".env");
-  // final apiSiteUrl = dotenv.env['API_SITE_URL'] ?? 'http://127.0.0.1:8000';
-  final apiSiteUrl = 'http://127.0.0.1:8000';
+  final apiSiteUrl = dotenv.env['API_SITE_URL'] ?? 'http://127.0.0.1:8000';
+  // final apiSiteUrl = 'http://127.0.0.1:8000';
 
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -39,27 +37,24 @@ void main() async {
     final talker = TalkerFlutter.init();
     GetIt.I.registerSingleton(talker);
     GetIt.I<Talker>().debug('Talker started...');
-
-    await Hive.initFlutter();
-    
-    await Hive.deleteFromDisk();
     
     Hive.registerAdapter(UidManagerAdapter());
-    final uidManagerBox = await Hive.openBox<Token>(HiveHeaders.uidManagerNameBox);
-    
     Hive.registerAdapter(TokenAdapter());
-    final tokenBox = await Hive.openBox<Token>(HiveHeaders.tokensNameBox);
-    
     Hive.registerAdapter(ProductAdapter());
-    final productsBox = await Hive.openBox<Product>(HiveHeaders.productsNameBox);
-  
     Hive.registerAdapter(ProfileAdapter());
-    final profilesBox = await Hive.openBox<Profile>(HiveHeaders.profilesNameBox);
-    
     Hive.registerAdapter(CategoryAdapter());
-    
     Hive.registerAdapter(CartAdapter());
+    Hive.registerAdapter(StatusAdapter());
+    Hive.registerAdapter(OrderAdapter());
+
+    await Hive.initFlutter();
+
+    final uidManagerBox = await Hive.openBox<int>(HiveHeaders.uidManagerNameBox);
+    final tokenBox = await Hive.openBox<Token>(HiveHeaders.tokensNameBox);
+    final productsBox = await Hive.openBox<Product>(HiveHeaders.productsNameBox);
+    final profilesBox = await Hive.openBox<Profile>(HiveHeaders.profilesNameBox);
     final cartsBox = await Hive.openBox<Cart>(HiveHeaders.cartsNameBox);
+    final ordersBox = await Hive.openBox<Order>(HiveHeaders.ordersNameBox);
 
     final dio = Dio();
     
@@ -129,10 +124,18 @@ void main() async {
       ),
     );
 
+    GetIt.I.registerSingleton<AbstractOrdersRepository>(
+      OrdersRepository(
+        dio: dio,
+        ordersBox: ordersBox, // Используем ordersBox
+        apiSiteUrl: apiSiteUrl,
+      ),
+    );
+
     FlutterError.onError =
         (details) => GetIt.I<Talker>().handle(details.exception, details.stack);
         
-    if (!kIsWeb && Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       try {
         await SystemChrome.setEnabledSystemUIMode(
           SystemUiMode.edgeToEdge,

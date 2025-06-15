@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/product_bloc.dart';
-import '/core/repositories/restaraunt/products/products.dart';
+import '/core/repositories/users/client/restaraunt/products/products.dart';
 import 'package:get_it/get_it.dart';
 
 @RoutePage()
 class ProductScreen extends StatefulWidget {
-  const ProductScreen({super.key, @PathParam('productId') required this.productId});
+  const ProductScreen({super.key, @PathParam('productName') required this.productName});
 
-  final int productId;
+  final String productName;
 
   @override
   State<ProductScreen> createState() => _ProductDetailScreenState();
@@ -23,20 +23,28 @@ class _ProductDetailScreenState extends State<ProductScreen> {
 
   @override
   void initState() {
-    _productBloc.add(LoadProduct(productId: widget.productId));
+    _productBloc.add(LoadProduct(productName: widget.productName));
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Center(child: Text('${widget.productId}'))),
+      appBar: AppBar(
+        title: Center(
+          child: Text(
+            '${widget.productName}',
+            style: theme.appBarTheme.titleTextStyle,
+          ),
+        ),
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           final completer = Completer();
-          _productBloc.add(LoadProduct(productId: widget.productId, completer: completer));
+          _productBloc.add(LoadProduct(productName: widget.productName, completer: completer));
           return completer.future;
         },
         child: BlocBuilder<ProductBloc, ProductState>(
@@ -62,39 +70,52 @@ class _ProductDetailScreenState extends State<ProductScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 100),
+                        child: Text('Название: ${product.name}', style: theme.textTheme.headlineLarge),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 100),
+                        child: Text(
+                          'Категория: ${product.category.russianUpperCase}',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 100),
+                        child: Text('Описание: ', style: theme.textTheme.titleLarge),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 100),
+                        child: Text(product.description, style: theme.textTheme.bodyLarge),
+                      ),
                       const SizedBox(height: 24),
-                      Text(product.name, style: theme.textTheme.headlineMedium),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${product.price} ₽',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Категория: ${product.category}',
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      Text('Описание', style: theme.textTheme.titleLarge),
-                      const SizedBox(height: 8),
-                      Text(product.description, style: theme.textTheme.bodyLarge),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: () {
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
+                      Padding(
+                        padding: const EdgeInsets.only(left: 100),
+                        child: Text(
+                          '${product.price} ₽',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: theme.primaryColor,
+                            fontWeight: FontWeight.bold,
                           ),
-                          child: const Text('Добавить в корзину'),
                         ),
                       ),
+                      const SizedBox(height: 32),
+                      Center(
+                        child: SizedBox(
+                          width: screenWidth > 600 ? 600 : screenWidth * 0.8,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: () {},
+                            style: theme.elevatedButtonTheme.style,
+                            child: const Text('Добавить в корзину'),
+                          ),
+                        ),
+                      )
                     ],
                   ),
                 ),
@@ -117,7 +138,7 @@ class _ProductDetailScreenState extends State<ProductScreen> {
                     const SizedBox(height: 30),
                     TextButton(
                       onPressed: () {
-                        _productBloc.add(LoadProduct(productId: widget.productId));
+                        _productBloc.add(LoadProduct(productName: widget.productName));
                       },
                       child: const Text('Попробовать снова'),
                     ),

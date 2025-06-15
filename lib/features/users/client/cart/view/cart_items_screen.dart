@@ -105,7 +105,7 @@ class _CartItemsScreenState extends State<CartItemsScreen> {
                           '${totalPrice.toStringAsFixed(2)} ₽',
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -119,8 +119,8 @@ class _CartItemsScreenState extends State<CartItemsScreen> {
                           context.router.navigate(const CartAddressRoute());
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
                         ),
                         child: const Text('Продолжить оформление'),
                       ),

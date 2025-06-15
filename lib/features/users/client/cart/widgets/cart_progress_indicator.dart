@@ -37,7 +37,7 @@ class CartProgressIndicator extends StatelessWidget {
             context: context,
             step: CartStep.address,
             currentStep: currentStep,
-            label: 'Адрес',
+            label: 'Комментарий',
           ),
           _buildConnectingLine(
             context: context,
@@ -74,16 +74,16 @@ class CartProgressIndicator extends StatelessWidget {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: isActive ? Colors.deepOrange : Colors.grey[800],
+              color: isActive ? Colors.white : Colors.grey[800],
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
               child: isCompleted
-                  ? const Icon(Icons.check, color: Colors.white, size: 24)
+                  ? Icon(Icons.check, color: isActive ? Colors.black : Colors.white, size: 24)
                   : Text(
                       '${step.index + 1}',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: isActive ? Colors.black : Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -94,7 +94,7 @@ class CartProgressIndicator extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: isActive ? Colors.deepOrange : Colors.grey,
+              color: isActive ? Colors.white : Colors.grey,
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             ),
           ),
@@ -110,7 +110,7 @@ class CartProgressIndicator extends StatelessWidget {
     return Expanded(
       child: Container(
         height: 2,
-        color: isActive ? Colors.deepOrange : Colors.grey[700],
+        color: isActive ? Colors.white : Colors.grey[700],
       ),
     );
   }

@@ -23,3 +23,14 @@ class ResetPassword extends ProfileEvent {
   @override
   List<Object?> get props => [profile];
 }
+
+class UpdateProfile extends ProfileEvent {
+  UpdateProfile({
+    required this.profile,
+  });
+
+  final Profile profile;
+
+  @override
+  List<Object?> get props => [profile];
+}

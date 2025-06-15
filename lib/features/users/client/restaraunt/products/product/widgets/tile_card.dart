@@ -2,7 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import '/core/hive/models/product/product.dart';
 import '/core/router/router.dart';
 import 'package:flutter/material.dart';
-import '/core/repositories/restaraunt/carts/carts.dart';
+import '/core/repositories/users/client/restaraunt/carts/carts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 
@@ -20,17 +20,9 @@ class ProductTileCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
-      elevation: 4, 
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 6), 
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-      ), 
-      clipBehavior: Clip.antiAlias,
-      color: const Color.fromARGB(255, 17, 17, 17),
       child: InkWell(
         onTap: () {
-          AutoRouter.of(context).push(ProductRoute(productId: product.id));
+          AutoRouter.of(context).push(ProductRoute(productName: product.name));
         },
         child: Stack(
           children: [
@@ -47,8 +39,8 @@ class ProductTileCard extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           color: Colors.grey[900],
-                          child: const Center(
-                            child: Icon(Icons.restaurant, color: Colors.green, size: 70),
+                          child: Center(
+                            child: Icon(Icons.restaurant, color: theme.primaryColor.withOpacity(0.6), size: 70),
                           ),
                         );
                       },
@@ -58,18 +50,25 @@ class ProductTileCard extends StatelessWidget {
                     flex: 4,
                     child: Container(
                       padding: const EdgeInsets.all(12),
-                      color: const Color.fromARGB(255, 17, 17, 17),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            product.name,
-                            style: theme.textTheme.titleSmall?.copyWith(color: Colors.white),
+                          Flexible(
+                            child: Text(
+                              product.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleSmall?.copyWith(color: Colors.white, fontSize: 22),
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            product.description ?? '',
-                            style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70),
+                          Flexible(
+                            child: Text(
+                              product.description ?? '',
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.8)),
+                            ),
                           ),
                         ],
                       ),
@@ -78,14 +77,14 @@ class ProductTileCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 17, 17, 17),
+                      // color: theme.cardColor,
                       border: Border(
-                        top: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        top: BorderSide(color: Colors.white.withOpacity(0.15)),
                       ),
                     ),
                     child: Text(
                       '${product.price} ₽',
-                      style: theme.textTheme.bodyMedium?.copyWith(color: Colors.green),
+                      style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -96,21 +95,21 @@ class ProductTileCard extends StatelessWidget {
               right: 12, 
               child: Container(
                 decoration: BoxDecoration(
-                  color: theme.primaryColor,
+                  color: theme.elevatedButtonTheme.style?.backgroundColor?.resolve({}),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 6, 
-                      offset: const Offset(0, 3), 
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 8, 
+                      offset: const Offset(0, 4), 
                     ),
                   ],
                 ),
                 child: IconButton(
                   onPressed: onAddToCart,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.add,
-                    color: Colors.white,
+                    color: theme.elevatedButtonTheme.style?.foregroundColor?.resolve({}),
                     size: 32, 
                   ),
                   padding: const EdgeInsets.all(12), 

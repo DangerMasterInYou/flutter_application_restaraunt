@@ -2,7 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import '/core/router/router.dart';
 import '/core/hive/models/models.dart';
-import '/core/repositories/restaraunt/restaraunt.dart';
+import '../../../../../core/repositories/users/client/restaraunt/restaraunt.dart';
 
 class CartTileCard extends StatelessWidget {
   const CartTileCard({
@@ -30,10 +30,10 @@ class CartTileCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
-      color: const Color.fromARGB(255, 40, 40, 40),
+      color: const Color.fromARGB(255, 30, 30, 30),
       child: InkWell(
         onTap: () {
-          context.router.push(ProductRoute(productId: cart.id));
+          context.router.push(ProductRoute(productName: cart.name));
         },
         child: SizedBox(
           height: isSmallScreen ? 140 : 160,
@@ -67,7 +67,7 @@ class CartTileCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.green,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
@@ -80,7 +80,7 @@ class CartTileCard extends StatelessWidget {
                         child: Text(
                           '${totalPrice.toStringAsFixed(0)} ₽',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.white,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -129,7 +129,7 @@ class CartTileCard extends StatelessWidget {
                             'Цена: ${cart.price} ₽',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.green,
+                              color: Colors.white,
                               fontSize: isSmallScreen ? 14 : 16,
                             ),
                           ),
@@ -199,7 +199,7 @@ class CartTileCard extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.green,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(4),
         boxShadow: [
           BoxShadow(
@@ -213,7 +213,7 @@ class CartTileCard extends StatelessWidget {
         onPressed: onPressed,
         icon: Icon(
           icon,
-          color: Colors.white,
+          color: Colors.black,
           size: size * 0.5,
         ),
         padding: EdgeInsets.zero,

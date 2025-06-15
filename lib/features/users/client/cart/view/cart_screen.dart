@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
-import '/core/repositories/restaraunt/carts/carts.dart';
+import '../../../../../core/repositories/users/client/restaraunt/carts/carts.dart';
 import '/core/router/router.dart';
 import '../bloc/cart_bloc.dart';
 import '../widgets/widgets.dart';
 
 part 'cart_items_screen.dart';
-part 'cart_address_screen.dart';
+part 'cart_comment_screen.dart';
 part 'cart_payment_screen.dart';
 
 @RoutePage()

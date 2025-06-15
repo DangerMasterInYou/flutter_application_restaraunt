@@ -19,6 +19,7 @@ class JWTTokensRepository extends AbstractJWTTokensRepository {
   final String apiSiteUrl;
 
   static const int tokenKey = 1;
+  static String? get accessToken => GetIt.I<AbstractJWTTokensRepository>().getAccessToken();
 
   @override
   Future<bool> getCheckJWTTokens() async {

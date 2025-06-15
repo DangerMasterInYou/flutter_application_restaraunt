@@ -3,6 +3,7 @@ import 'package:flutter_application_restaraunt/core/router/router.dart';
 import 'package:flutter_application_restaraunt/core/theme/theme.dart';
 import 'package:get_it/get_it.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 class FlutterApplicationRestaraunt extends StatefulWidget {
   const FlutterApplicationRestaraunt({super.key});
@@ -17,8 +18,17 @@ class _AppState extends State<FlutterApplicationRestaraunt> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'FlutterApplicationRestaraunt',
+      title: 'DonerKebab',
       theme: darkTheme,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ru', 'RU'),
+        Locale('en', ''),
+      ],
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(

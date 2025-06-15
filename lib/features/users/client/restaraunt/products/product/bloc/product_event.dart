@@ -4,13 +4,13 @@ abstract class ProductEvent extends Equatable {}
 
 class LoadProduct extends ProductEvent {
   LoadProduct({
-    required this.productId,
+    required this.productName,
     this.completer,
   });
 
-  final int productId;
+  final String productName;
   final Completer? completer;
 
   @override
-  List<Object?> get props => [productId, completer];
+  List<Object?> get props => [productName, completer];
 }
