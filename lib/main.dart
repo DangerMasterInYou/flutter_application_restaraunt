@@ -51,6 +51,7 @@ void main() async {
 
     final uidManagerBox = await Hive.openBox<int>(HiveHeaders.uidManagerNameBox);
     final tokenBox = await Hive.openBox<Token>(HiveHeaders.tokensNameBox);
+  GetIt.I.registerSingleton<Box<Token>>(tokenBox);
     final productsBox = await Hive.openBox<Product>(HiveHeaders.productsNameBox);
     final profilesBox = await Hive.openBox<Profile>(HiveHeaders.profilesNameBox);
     final cartsBox = await Hive.openBox<Cart>(HiveHeaders.cartsNameBox);

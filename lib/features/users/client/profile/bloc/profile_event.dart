@@ -34,3 +34,14 @@ class UpdateProfile extends ProfileEvent {
   @override
   List<Object?> get props => [profile];
 }
+
+class LogoutProfile extends ProfileEvent {
+  LogoutProfile({
+    this.completer,
+  });
+
+  final Completer? completer;
+
+  @override
+  List<Object?> get props => [completer];
+}

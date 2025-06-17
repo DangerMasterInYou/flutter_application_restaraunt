@@ -168,4 +168,15 @@ class LoginRepository implements AbstractLoginRepository {
       throw Exception('Неизвестная ошибка: $e');
     }
   }
+
+  @override
+  Future<void> logout() async {
+    try {
+      await tokenBox.clear();
+      GetIt.instance<Talker>().log('User logged out, tokenBox cleared.');
+    } catch (e, st) {
+      GetIt.instance<Talker>().handle(e, st, 'Error during logout');
+      throw Exception('Failed to logout: $e');
+    }
+  }
 }

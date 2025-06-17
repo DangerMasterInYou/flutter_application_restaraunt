@@ -82,7 +82,7 @@ PreferredSizeWidget buildWideAppBar(BuildContext context) {
         ),
       ),
       IconButton(
-        icon: const Icon(Icons.person),
+        icon: const Icon(Icons.list),
         onPressed: () {
           context.router.push(const OrdersRoute());
         },

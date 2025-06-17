@@ -92,7 +92,7 @@ class _MenuScreenState extends State<MenuScreen> {
           },
         ),
         duration: const Duration(seconds: 2),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Colors.black,
       ),
     );
   }
