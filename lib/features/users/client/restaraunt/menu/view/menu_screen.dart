@@ -11,9 +11,10 @@ import '/core/repositories/users/client/restaraunt/products/products.dart';
 import '/core/repositories/users/client/restaraunt/carts/carts.dart';
 import '/core/hive/models/models.dart';
 import '../bloc/menu_bloc.dart';
-import '../../products/product/widgets/widgets.dart';
+import '../../products/product_variant/widgets/widgets.dart';
 import '../widgets/app_bar.dart';
 import '/core/router/router.dart';
+import 'package:hive/hive.dart';
 
 @RoutePage()
 class MenuScreen extends StatefulWidget {
@@ -30,7 +31,7 @@ class _MenuScreenState extends State<MenuScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     ErrorWidget.builder = (FlutterErrorDetails details) {
       return Container(
         color: Colors.grey[200],
@@ -42,19 +43,19 @@ class _MenuScreenState extends State<MenuScreen> {
         ),
       );
     };
-    
+
     _menuBloc = MenuBloc(
       GetIt.I<AbstractJWTTokensRepository>(),
       GetIt.I<AbstractProductsRepository>(),
       GetIt.I<AbstractCartsRepository>(),
     );
     _menuBloc.add(LoadMenu());
-    
+
     _menuBloc.stream.listen((state) {
       if (state is MenuLoaded) {
         print('Загружено ${state.productsList.length} продуктов');
         if (state.productsList.isNotEmpty) {
-          print('Первый продукт: ${state.productsList[0].name}');
+          print('Первый продукт: ${state.productsList[0].product.name}');
         }
       }
     });
@@ -65,26 +66,32 @@ class _MenuScreenState extends State<MenuScreen> {
     _menuBloc.close();
     super.dispose();
   }
-  List<Product> _getFilteredProducts(List<Product> products) {
+
+  List<ProductFull> _getFilteredProducts(List<ProductFull> products) {
     if (_selectedCategory == null) {
       return products;
     }
-    return products.where((product) => product.category == _selectedCategory).toList();
+    return products
+        .where(
+            (productFull) => productFull.category?.id == _selectedCategory?.id)
+        .toList();
   }
 
-  void _addToCart(Product product) {
+  void _addToCart(ProductFull productFull) {
+    final variant =
+        productFull.variants.isNotEmpty ? productFull.variants.first : null;
     final cartItem = Cart(
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      imageUrl: product.imageUrl,
+      id: productFull.product.id,
+      name: productFull.product.name,
+      price: variant?.price ?? 0,
+      imageUrl: productFull.product.imageUrl,
       count: 1,
     );
     _menuBloc.add(AddItemCartMenu(cartItem: cartItem));
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${product.name} добавлен в корзину'),
+        content: Text('${productFull.product.name} добавлен в корзину'),
         action: SnackBarAction(
           label: 'Перейти в корзину',
           onPressed: () {
@@ -112,98 +119,110 @@ class _MenuScreenState extends State<MenuScreen> {
             body: CustomScrollView(
               slivers: [
                 SliverAppBar(
-                  title: isWideScreen ? null : Text('Меню', style: theme.textTheme.titleMedium),
-                  leading: isWideScreen ? Center(child:Container(
-                      height: 60,
-                      width: 60,
-                      padding: const EdgeInsets.all(4),
-                      margin: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                      ),
-                      child: ClipOval(
-                        child: SvgPicture.asset(
-                          'assets/svg/logo.svg',
-                          fit: BoxFit.contain,
-                          height: 60,
-                          width: 60,
+                  title: isWideScreen
+                      ? null
+                      : Text('Меню', style: theme.textTheme.titleMedium),
+                  leading: isWideScreen
+                      ? Center(
+                          child: Container(
+                            height: 60,
+                            width: 60,
+                            padding: const EdgeInsets.all(4),
+                            margin: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                            ),
+                            child: ClipOval(
+                              child: SvgPicture.asset(
+                                'assets/svg/logo.svg',
+                                fit: BoxFit.contain,
+                                height: 60,
+                                width: 60,
+                              ),
+                            ),
+                          ),
+                        )
+                      : SizedBox(
+                          width: 80,
+                          child: Container(
+                            height: 40,
+                            width: 40,
+                            padding: const EdgeInsets.all(4),
+                            margin: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                            ),
+                            child: ClipOval(
+                              child: SvgPicture.asset(
+                                'assets/svg/logo.svg',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),) : SizedBox(
-                    width: 80,
-                    child: Container(
-                      height: 40,
-                      width: 40,
-                      padding: const EdgeInsets.all(4),
-                      margin: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                      ),
-                      child: ClipOval(
-                        child: SvgPicture.asset(
-                          'assets/svg/logo.svg',
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                  ),
-                  actions: isWideScreen 
-                    ? (buildWideAppBar(context) as AppBar).actions 
-                    : (buildNarrowAppBar(context) as AppBar).actions,
+                  actions: isWideScreen
+                      ? (buildWideAppBar(context) as AppBar).actions
+                      : (buildNarrowAppBar(context) as AppBar).actions,
                   floating: true,
                   pinned: true,
                   snap: false,
-                  flexibleSpace: isWideScreen 
-                    ? FlexibleSpaceBar(
-                      titlePadding: const EdgeInsets.only(left: 50, right: 100),
-                        title: TextButton.icon(
-                          icon: Icon(Icons.location_city, color: theme.iconTheme.color, size: 40),
-                          label: Text('Ханты-Мансийск, Калинина, 22', style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
-                          onPressed: null,
-                        ),
-                      )
-                    : null,
+                  flexibleSpace: isWideScreen
+                      ? FlexibleSpaceBar(
+                          titlePadding:
+                              const EdgeInsets.only(left: 50, right: 100),
+                          title: TextButton.icon(
+                            icon: Icon(Icons.location_city,
+                                color: theme.iconTheme.color, size: 40),
+                            label: Text('Ханты-Мансийск, Калинина, 22',
+                                style: theme.textTheme.bodyMedium,
+                                textAlign: TextAlign.center),
+                            onPressed: null,
+                          ),
+                        )
+                      : null,
                 ),
                 SliverToBoxAdapter(
                   child: BlocBuilder<MenuBloc, MenuState>(
                     bloc: _menuBloc,
                     builder: (context, state) {
                       final theme = Theme.of(context);
-                      
+
                       if (state is MenuLoading) {
                         return const Center(
                           child: CircularProgressIndicator(),
                         );
                       } else if (state is MenuLoadingFailure) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Не удалось загрузить меню.',
-                                  style: theme.textTheme.titleMedium,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Попробовать снова',
-                                  style: theme.textTheme.titleMedium,
-                                ),
-                                const SizedBox(height: 8),
-                                IconButton(
-                                  icon: const Icon(Icons.refresh, size: 80),
-                                  onPressed: () {
-                                    _menuBloc.add(LoadMenu());
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        } else if (state is MenuLoaded) {
-                        final filteredProducts = _getFilteredProducts(state.productsList);
-                        
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Не удалось загрузить меню.',
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Попробовать снова',
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              IconButton(
+                                icon: const Icon(Icons.refresh, size: 80),
+                                onPressed: () {
+                                  _menuBloc.add(LoadMenu());
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      } else if (state is MenuLoaded) {
+                        final filteredProducts =
+                            _getFilteredProducts(state.productsList);
+                        final categories = state.categories;
+
                         if (filteredProducts.isEmpty) {
                           return Center(
                             child: Text(
@@ -212,7 +231,7 @@ class _MenuScreenState extends State<MenuScreen> {
                             ),
                           );
                         }
-                        
+
                         int crossAxisCount;
                         if (screenWidth > 1200) {
                           crossAxisCount = 4;
@@ -223,7 +242,7 @@ class _MenuScreenState extends State<MenuScreen> {
                         } else {
                           crossAxisCount = 1;
                         }
-                        
+
                         return Center(
                           child: Container(
                             constraints: const BoxConstraints(maxWidth: 1500),
@@ -232,8 +251,10 @@ class _MenuScreenState extends State<MenuScreen> {
                             child: Column(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  color: theme.scaffoldBackgroundColor.withOpacity(0.95),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8.0),
+                                  color: theme.scaffoldBackgroundColor
+                                      .withOpacity(0.95),
                                   child: Wrap(
                                     spacing: 8.0,
                                     runSpacing: 8.0,
@@ -241,7 +262,8 @@ class _MenuScreenState extends State<MenuScreen> {
                                     children: [
                                       const SizedBox(width: 8),
                                       Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 4.0),
                                         child: ElevatedButton(
                                           onPressed: () {
                                             setState(() {
@@ -249,27 +271,36 @@ class _MenuScreenState extends State<MenuScreen> {
                                             });
                                           },
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: _selectedCategory == null
-                                                ? theme.primaryColor
-                                                : theme.elevatedButtonTheme.style?.backgroundColor?.resolve({}),
-                                            foregroundColor: _selectedCategory == null
-                                                ? const Color(0xFF1A1A1A)
-                                                : theme.elevatedButtonTheme.style?.foregroundColor?.resolve({}),
+                                            backgroundColor:
+                                                _selectedCategory == null
+                                                    ? theme.primaryColor
+                                                    : theme.elevatedButtonTheme
+                                                        .style?.backgroundColor
+                                                        ?.resolve({}),
+                                            foregroundColor:
+                                                _selectedCategory == null
+                                                    ? const Color(0xFF1A1A1A)
+                                                    : theme.elevatedButtonTheme
+                                                        .style?.foregroundColor
+                                                        ?.resolve({}),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               side: BorderSide(
                                                 color: _selectedCategory == null
                                                     ? Colors.transparent
-                                                    : Colors.white.withOpacity(0.2),
+                                                    : Colors.white
+                                                        .withOpacity(0.2),
                                               ),
                                             ),
                                           ),
                                           child: const Text('Все категории'),
                                         ),
                                       ),
-                                      ...Category.values.map((category) {
+                                      ...categories.map((category) {
                                         return Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 4.0),
                                           child: ElevatedButton(
                                             onPressed: () {
                                               setState(() {
@@ -277,22 +308,38 @@ class _MenuScreenState extends State<MenuScreen> {
                                               });
                                             },
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: _selectedCategory == category
-                                                  ? theme.primaryColor
-                                                  : theme.elevatedButtonTheme.style?.backgroundColor?.resolve({}),
-                                              foregroundColor: _selectedCategory == category
-                                                  ? const Color(0xFF1A1A1A)
-                                                  : theme.elevatedButtonTheme.style?.foregroundColor?.resolve({}),
+                                              backgroundColor:
+                                                  _selectedCategory?.id ==
+                                                          category.id
+                                                      ? theme.primaryColor
+                                                      : theme
+                                                          .elevatedButtonTheme
+                                                          .style
+                                                          ?.backgroundColor
+                                                          ?.resolve({}),
+                                              foregroundColor:
+                                                  _selectedCategory?.id ==
+                                                          category.id
+                                                      ? const Color(0xFF1A1A1A)
+                                                      : theme
+                                                          .elevatedButtonTheme
+                                                          .style
+                                                          ?.foregroundColor
+                                                          ?.resolve({}),
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                                 side: BorderSide(
-                                                  color: _selectedCategory == category
-                                                      ? Colors.transparent
-                                                      : Colors.white.withOpacity(0.2),
+                                                  color:
+                                                      _selectedCategory?.id ==
+                                                              category.id
+                                                          ? Colors.transparent
+                                                          : Colors.white
+                                                              .withOpacity(0.2),
                                                 ),
                                               ),
                                             ),
-                                            child: Text(category.russianUpperCase),
+                                            child: Text(category.name),
                                           ),
                                         );
                                       }).toList(),
@@ -304,25 +351,30 @@ class _MenuScreenState extends State<MenuScreen> {
                                   child: RefreshIndicator(
                                     onRefresh: () async {
                                       final completer = Completer();
-                                      _menuBloc.add(LoadMenu(completer: completer));
+                                      _menuBloc
+                                          .add(LoadMenu(completer: completer));
                                       return completer.future;
                                     },
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: GridView.builder(
-                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                        gridDelegate:
+                                            SliverGridDelegateWithFixedCrossAxisCount(
                                           crossAxisCount: crossAxisCount,
                                           childAspectRatio: 0.75,
                                           crossAxisSpacing: 12,
                                           mainAxisSpacing: 12,
-                                          mainAxisExtent: screenWidth <= 300 ? 400 : null,
+                                          mainAxisExtent:
+                                              screenWidth <= 300 ? 400 : null,
                                         ),
                                         itemCount: filteredProducts.length,
                                         itemBuilder: (context, index) {
-                                          final product = filteredProducts[index];
+                                          final productFull =
+                                              filteredProducts[index];
                                           return ProductTileCard(
-                                            product: product,
-                                            onAddToCart: () => _addToCart(product),
+                                            product: productFull,
+                                            onAddToCart: () =>
+                                                _addToCart(productFull),
                                           );
                                         },
                                       ),
@@ -342,12 +394,11 @@ class _MenuScreenState extends State<MenuScreen> {
                 ),
               ],
             ),
-            floatingActionButton: 
-            BlocBuilder<MenuBloc, MenuState>(
+            floatingActionButton: BlocBuilder<MenuBloc, MenuState>(
               bloc: _menuBloc,
               builder: (BuildContext context, MenuState state) {
                 final theme = Theme.of(context);
-                
+
                 if (state is MenuLoaded) {
                   return SizedBox(
                     width: 90.0,
@@ -358,7 +409,8 @@ class _MenuScreenState extends State<MenuScreen> {
                       },
                       backgroundColor: theme.primaryColor,
                       tooltip: 'Корзина',
-                      child: const Icon(Icons.shopping_cart, size: 50.0, color: Colors.black),
+                      child: const Icon(Icons.shopping_cart,
+                          size: 50.0, color: Colors.black),
                     ),
                   );
                 } else {
@@ -367,8 +419,8 @@ class _MenuScreenState extends State<MenuScreen> {
               },
             ),
           );
-      },
-    ),
-  );
+        },
+      ),
+    );
   }
 }

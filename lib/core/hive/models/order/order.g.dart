@@ -125,30 +125,17 @@ class StatusAdapter extends TypeAdapter<Status> {
 // JsonSerializableGenerator
 // **************************************************************************
 
-DateTime? _parseDateTime(dynamic value) {
-  if (value == null || value is! String || value.isEmpty) {
-    return null;
-  }
-  try {
-    return DateTime.parse(value);
-  } catch (e) {
-    return null; // Or handle error, like returning DateTime.now() or a specific default
-  }
-}
-
 Order _$OrderFromJson(Map<String, dynamic> json) => Order(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      userId: (json['user_id'] as num?)?.toInt() ?? 0,
-      itemsProducts: json['items_products'] as String? ?? '',
-      paymentMethod: json['payment_method'] as String? ?? '',
-      payed: json['payed'] as bool? ?? false,
-      status: json['status'] == null
-          ? Status.created // Default status if status field is null
-          : $enumDecodeNullable(_$StatusEnumMap, json['status']) ?? Status.created, // Default if enum decode fails
-      createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
-      createdBy: json['created_by'] as String? ?? '',
-      updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
-      updatedBy: json['updated_by'] as String? ?? '',
+      id: (json['id'] as num).toInt(),
+      userId: (json['user_id'] as num).toInt(),
+      itemsProducts: json['items_products'] as String,
+      paymentMethod: json['payment_method'] as String,
+      payed: json['payed'] as bool,
+      status: $enumDecode(_$StatusEnumMap, json['status']),
+      createdAt: DateTime.parse(json['created_at'] as String),
+      createdBy: json['created_by'] as String,
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+      updatedBy: json['updated_by'] as String,
     );
 
 Map<String, dynamic> _$OrderToJson(Order instance) => <String, dynamic>{

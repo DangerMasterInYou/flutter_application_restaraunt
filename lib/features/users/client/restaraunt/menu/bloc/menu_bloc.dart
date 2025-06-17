@@ -9,15 +9,17 @@ import 'package:talker_flutter/talker_flutter.dart';
 import '/core/repositories/users/client/restaraunt/products/products.dart';
 import '/core/repositories/users/client/restaraunt/carts/carts.dart';
 import '/core/hive/models/models.dart';
+import '/core/hive/models/product_full/category/category.dart';
 
-import '/core/hive/models/token/token.dart';
 import '/core/repositories/services/jwt_tokens/jwt_tokens.dart';
 
 part 'menu_event.dart';
 part 'menu_state.dart';
 
 class MenuBloc extends Bloc<MenuEvent, MenuState> {
-  MenuBloc(this.jwtTokensRepository, this.productsRepository, this.cartsRepository) : super(MenuInitial()) {
+  MenuBloc(
+      this.jwtTokensRepository, this.productsRepository, this.cartsRepository)
+      : super(MenuInitial()) {
     on<LoadMenu>(_load);
     on<AddItemCartMenu>(_addToCart);
   }
@@ -32,7 +34,7 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
   ) async {
     try {
       emit(MenuLoading());
-      
+
       // bool isTokenValid = false;
       // try {
       //   isTokenValid = await _withTimeout(
@@ -44,28 +46,36 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
       //   GetIt.I<Talker>().handle(e, st);
       //   isTokenValid = false;
       // }
-      
+
       // if (!isTokenValid) {
       //   emit(LoginInvalid());
       //   return;
       // }
-      
-      List<Product> productsList = [];
+
+      List<Product> products = [];
       try {
-        productsList = await _withTimeout(
-          productsRepository.getProductsList(),
-          const Duration(seconds: 5),
-          'Products list fetch timeout'
-        );
-        if (productsList.isEmpty) {
+        products = await _withTimeout(productsRepository.getProductsList(),
+            const Duration(seconds: 5), 'Products list fetch timeout');
+        if (products.isEmpty) {
           throw Exception('No products found');
         }
       } catch (e, st) {
         GetIt.I<Talker>().handle(e, st);
         throw Exception('Failed to load menu items: $e');
       }
-      
-      emit(MenuLoaded(productsList: productsList));
+
+      // Получаем ProductFull для каждого продукта
+      final List<ProductFull> productsList = [];
+      for (final product in products) {
+        final full = await productsRepository.getFullProduct(product.id);
+        if (full != null) {
+          productsList.add(full);
+        }
+      }
+      // Загружаем категории из Hive
+      final categoryBox = Hive.box<Category>('categories_box');
+      final categories = categoryBox.values.toList();
+      emit(MenuLoaded(productsList: productsList, categories: categories));
     } catch (e, st) {
       emit(MenuLoadingFailure(exception: e));
       GetIt.I<Talker>().handle(e, st);
@@ -73,8 +83,9 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
       event.completer?.complete();
     }
   }
-  
-  Future<T> _withTimeout<T>(Future<T> future, Duration timeout, String message) {
+
+  Future<T> _withTimeout<T>(
+      Future<T> future, Duration timeout, String message) {
     return future.timeout(
       timeout,
       onTimeout: () => throw TimeoutException(message, timeout),
@@ -94,7 +105,7 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
       await _load(LoadMenu(), emit);
     }
   }
-  
+
   @override
   void onError(Object error, StackTrace stackTrace) {
     super.onError(error, stackTrace);

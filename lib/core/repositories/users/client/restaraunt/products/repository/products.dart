@@ -2,10 +2,10 @@ import 'package:dio/dio.dart';
 
 import '../products.dart';
 
-
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import '/core/hive/models/models.dart';
 
 class ProductsRepository implements AbstractProductsRepository {
   ProductsRepository({
@@ -29,8 +29,6 @@ class ProductsRepository implements AbstractProductsRepository {
       GetIt.instance<Talker>().handle(e, st);
       productsList = productsBox.values.toList();
     }
-
-    productsList.sort((a, b) => b.price.compareTo(a.price));
     return productsList;
   }
 
@@ -43,10 +41,6 @@ class ProductsRepository implements AbstractProductsRepository {
           sendTimeout: const Duration(seconds: 5),
         ),
       );
-    
-      print('Статус ответа: ${response.statusCode}');
-      print('Данные ответа: ${response.data}');
-
       if (response.statusCode != 200) {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -54,7 +48,6 @@ class ProductsRepository implements AbstractProductsRepository {
           message: 'Ошибка при загрузке данных: ${response.statusCode}',
         );
       }
-
       final data = response.data;
       if (data is! List) {
         throw DioException(
@@ -63,13 +56,6 @@ class ProductsRepository implements AbstractProductsRepository {
           message: 'Неожиданный формат ответа',
         );
       }
-    
-      print('Количество элементов в списке: ${data.length}');
-      
-      if (data.isNotEmpty) {
-        print('Первый элемент: ${data[0]}');
-      }
-
       final productsList = data.map((item) {
         if (item is! Map<String, dynamic>) {
           throw DioException(
@@ -79,18 +65,13 @@ class ProductsRepository implements AbstractProductsRepository {
           );
         }
         try {
-          print('Преобразование элемента: $item');
           final product = Product.fromJson(item);
-          print('Успешно преобразовано в Product: ${product.name}');
           return product;
         } catch (e) {
-          print('Ошибка при преобразовании элемента: $e');
           rethrow;
         }
       }).toList();
-      
-      print('Количество преобразованных продуктов: ${productsList.length}');
-      return productsList;
+      return List<Product>.from(productsList);
     } on DioException catch (e) {
       GetIt.instance<Talker>().handle(e, e.stackTrace);
       rethrow;
@@ -127,7 +108,6 @@ class ProductsRepository implements AbstractProductsRepository {
           sendTimeout: const Duration(seconds: 5),
         ),
       );
-
       if (response.statusCode != 200) {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -135,7 +115,6 @@ class ProductsRepository implements AbstractProductsRepository {
           message: 'Ошибка при загрузке данных: ${response.statusCode}',
         );
       }
-
       final productData = response.data;
       if (productData is! Map<String, dynamic>) {
         throw DioException(
@@ -144,11 +123,61 @@ class ProductsRepository implements AbstractProductsRepository {
           message: 'Неожиданный формат ответа для продукта $productName',
         );
       }
-      
       final product = Product.fromJson(productData);
       return product;
     } catch (e) {
       throw Exception('Ошибка при получении продукта: $e');
     }
+  }
+
+  Future<ProductFull?> getFullProduct(int productId) async {
+    final product = productsBox.get(productId);
+    if (product == null) return null;
+    final categoryBox = Hive.box<Category>('categories_box');
+    final variantBox = Hive.box<ProductVariantHive>('product_variants_box');
+    final modifierGroupBox = Hive.box<ModifierGroupHive>('modifier_groups_box');
+    final modifierBox = Hive.box<ModifierHive>('modifiers_box');
+    final comboBundleBox = Hive.box<ComboBundleHive>('combo_bundles_box');
+
+    final category = categoryBox.get(product.categoryId);
+    final variants = product.variantIds
+        .map((id) => variantBox.get(id))
+        .whereType<ProductVariantHive>()
+        .toList();
+
+    // Для каждого варианта достаем группы модификаторов
+    final Map<int, List<ModifierGroupHive>> variantModifierGroups = {};
+    final Map<int, List<ModifierHive>> modifierGroupsModifiers = {};
+    for (final variant in variants) {
+      // Предполагается, что variant.modifierGroupIds - список id групп
+      final groups = variant.modifierGroupIds
+          .map((id) => modifierGroupBox.get(id))
+          .whereType<ModifierGroupHive>()
+          .toList();
+      variantModifierGroups[variant.id] = groups;
+      // Для каждой группы достаем модификаторы
+      for (final group in groups) {
+        final modifiers = group.modifierIds
+            .map((id) => modifierBox.get(id))
+            .whereType<ModifierHive>()
+            .toList();
+        modifierGroupsModifiers[group.id] = modifiers;
+      }
+    }
+
+    // ComboBundles, связанные с вариантами этого продукта
+    final comboBundles = comboBundleBox.values
+        .whereType<ComboBundleHive>()
+        .where((cb) => product.variantIds.contains(cb.comboVariantId))
+        .toList();
+
+    return ProductFull(
+      product: product,
+      category: category,
+      variants: variants,
+      variantModifierGroups: variantModifierGroups,
+      modifierGroupsModifiers: modifierGroupsModifiers,
+      comboBundles: comboBundles,
+    );
   }
 }

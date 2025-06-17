@@ -1,5 +1,5 @@
 export 'cart/cart.dart';
-export 'product/product.dart';
+export 'product_full/product/product.dart';
 export 'profile/profile.dart';
 export 'token/token.dart';
 export 'uid_manager/uid_manager.dart';

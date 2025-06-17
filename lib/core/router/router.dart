@@ -1,6 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import '/features/users/client/restaraunt/menu/view/menu_screen.dart';
-import '/features/users/client/restaraunt/products/product/view/product_screen.dart';
+import '../../features/users/client/restaraunt/products/product_variant/view/product_screen.dart';
 import '/features/auth/login/view/login_screen.dart';
 import '/features/users/client/cart/view/cart_screen.dart';
 import '/features/users/client/profile/view/profile_screen.dart';
@@ -13,19 +13,19 @@ part 'router.gr.dart';
 class AppRouter extends _$AppRouter {
   @override
   List<AutoRoute> get routes => [
-    AutoRoute(page: MenuRoute.page, path: '/menu', initial: true),
-    AutoRoute(page: LoginRoute.page, path: '/login'),
-    AutoRoute(page: ProductRoute.page, path: '/products/:productName'),
-    AutoRoute(page: ProfileRoute.page, path: '/profile'),
-    AutoRoute(page: OrdersRoute.page, path: '/orders'),
-    AutoRoute(
-      path: '/cart',
-      page: CartRoute.page,
-      children: [
-        AutoRoute(path: 'part/1', page: CartItemsRoute.page),
-        AutoRoute(path: 'part/2', page: CartAddressRoute.page),
-        AutoRoute(path: 'part/3', page: CartPaymentRoute.page),
-      ],
-    ),
-  ];
+        AutoRoute(page: MenuRoute.page, path: '/menu', initial: true),
+        AutoRoute(page: LoginRoute.page, path: '/login'),
+        AutoRoute(page: ProductRoute.page, path: '/products/:productName'),
+        AutoRoute(page: ProfileRoute.page, path: '/profile'),
+        AutoRoute(page: OrdersRoute.page, path: '/orders'),
+        AutoRoute(
+          path: '/cart',
+          page: CartRoute.page,
+          children: [
+            AutoRoute(path: 'part/1', page: CartItemsRoute.page),
+            AutoRoute(path: 'part/2', page: CartAddressRoute.page),
+            AutoRoute(path: 'part/3', page: CartPaymentRoute.page),
+          ],
+        ),
+      ];
 }
