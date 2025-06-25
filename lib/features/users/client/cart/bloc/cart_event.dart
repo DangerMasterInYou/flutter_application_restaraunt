@@ -1,66 +1,34 @@
+// lib/features/cart/presentation/bloc/cart_event.dart
 part of 'cart_bloc.dart';
 
-abstract class CartEvent extends Equatable {}
-
-class LoadCartList extends CartEvent {
-  LoadCartList({this.completer});
-
-  final Completer? completer;
-
-  @override
-  List<Object?> get props => [completer];
+abstract class CartEvent extends Equatable {
+  const CartEvent();
 }
 
-class RemoveFromCart extends CartEvent {
-  RemoveFromCart({required this.item});
-
-  final Cart item;
-
+class LoadCart extends CartEvent {
+  const LoadCart();
   @override
-  List<Object?> get props => [item];
-}
-
-class AddToCart extends CartEvent {
-  AddToCart({required this.cart});
-
-  final Cart cart;
-
-  @override
-  List<Object?> get props => [cart];
-}
-
-class SubtractFromCart extends CartEvent {
-  SubtractFromCart({required this.cart});
-
-  final Cart cart;
-
-  @override
-  List<Object?> get props => [cart];
-}
-
-class DeleteItemFromCart extends CartEvent {
-  DeleteItemFromCart({required this.cart});
-
-  final Cart cart;
-
-  @override
-  List<Object?> get props => [cart];
+  List<Object?> get props => [];
 }
 
 class AddItemToCart extends CartEvent {
-  AddItemToCart({required this.cart});
-
-  final Cart cart;
-
+  final CartItemRequestDTO item;
+  const AddItemToCart(this.item);
   @override
-  List<Object?> get props => [cart];
+  List<Object> get props => [item];
 }
 
-class SubtractItemFromCart extends CartEvent {
-  SubtractItemFromCart({required this.cart});
-
-  final Cart cart;
-
+class UpdateItemQuantity extends CartEvent {
+  final int cartItemId;
+  final int newQuantity;
+  const UpdateItemQuantity({required this.cartItemId, required this.newQuantity});
   @override
-  List<Object?> get props => [cart];
+  List<Object> get props => [cartItemId, newQuantity];
+}
+
+class RemoveItemFromCart extends CartEvent {
+  final int cartItemId;
+  const RemoveItemFromCart(this.cartItemId);
+  @override
+  List<Object> get props => [cartItemId];
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter_application_restaraunt/api_config.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'package:flutter/material.dart';
@@ -18,10 +19,18 @@ import 'package:talker_bloc_logger/talker_bloc_logger.dart';
 
 import 'core/core.dart';
 import 'app.dart';
+import 'features/users/admin/view/admin_panel_screen.dart';
+import 'core/repositories/users/admin/restaraunt/product_full/category/repository/category.dart';
+import 'core/repositories/users/admin/restaraunt/product_full/product/repository/products.dart';
+import 'core/repositories/users/admin/restaraunt/product_full/product_variant/repository/product_variant.dart';
+import 'core/repositories/users/admin/restaraunt/product_full/modifier_full/modifier/repository/modifier.dart';
+import 'core/repositories/users/admin/restaraunt/product_full/modifier_full/modifier_group/repository/modifier_group.dart';
+import 'core/repositories/users/admin/restaraunt/product_full/modifier_full/modifier_group_association/repository/modifier_group_association.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
   final apiSiteUrl = dotenv.env['API_SITE_URL'] ?? 'http://127.0.0.1:8000';
+  ApiConfig.apiSiteUrl = dotenv.env['API_SITE_URL'] ?? 'http://127.0.0.1:8000';
   // final apiSiteUrl = 'http://127.0.0.1:8000';
 
   runZonedGuarded(() async {
@@ -38,36 +47,18 @@ void main() async {
     GetIt.I.registerSingleton(talker);
     GetIt.I<Talker>().debug('Talker started...');
 
-    Hive.registerAdapter(UidManagerAdapter());
     Hive.registerAdapter(TokenAdapter());
-    Hive.registerAdapter(ProductAdapter());
-    Hive.registerAdapter(ProfileAdapter());
-    Hive.registerAdapter(CategoryAdapter());
-    Hive.registerAdapter(CartAdapter());
-    Hive.registerAdapter(StatusAdapter());
-    Hive.registerAdapter(OrderAdapter());
-    Hive.registerAdapter(ProductVariantHiveAdapter());
-    Hive.registerAdapter(ModifierGroupHiveAdapter());
-    Hive.registerAdapter(ModifierHiveAdapter());
-    Hive.registerAdapter(ComboBundleHiveAdapter());
+    Hive.registerAdapter(MenuAdapter());
+    Hive.registerAdapter(ModifierGroupAdapter());
+    Hive.registerAdapter(ModifierAdapter());
 
     await Hive.initFlutter();
 
-    final uidManagerBox =
-        await Hive.openBox<int>(HiveHeaders.uidManagerNameBox);
     final tokenBox = await Hive.openBox<Token>(HiveHeaders.tokensNameBox);
-    final productsBox =
-        await Hive.openBox<Product>(HiveHeaders.productsNameBox);
-    final profilesBox =
-        await Hive.openBox<Profile>(HiveHeaders.profilesNameBox);
-    final cartsBox = await Hive.openBox<Cart>(HiveHeaders.cartsNameBox);
-    final ordersBox = await Hive.openBox<Order>(HiveHeaders.ordersNameBox);
-    await Hive.openBox<Category>(HiveHeaders.categoriesNameBox);
-    await Hive.openBox<Product>(HiveHeaders.productsNameBox);
-    await Hive.openBox<ProductVariantHive>(HiveHeaders.productVariantsNameBox);
-    await Hive.openBox<ModifierGroupHive>(HiveHeaders.modifierGroupsNameBox);
-    await Hive.openBox<ModifierHive>(HiveHeaders.modifiersNameBox);
-    await Hive.openBox<ComboBundleHive>(HiveHeaders.comboBundlesNameBox);
+    final menuBox = await Hive.openBox<Menu>(HiveHeaders.menuNameBox);
+    await Hive.openBox<ModifierGroup>(HiveHeaders.modifierGroupNameBox);
+    await Hive.openBox<Modifier>(HiveHeaders.modifierNameBox);
+    // final orderBox = await Hive.openBox<Modifier>(HiveHeaders.orderNameBox);
 
     final dio = Dio();
 
@@ -97,12 +88,35 @@ void main() async {
       ),
     );
 
-    GetIt.I.registerLazySingleton<AbstractProductsRepository>(
-      () => ProductsRepository(
+    GetIt.I.registerLazySingleton<AbstractMenuRepository>(
+      () => MenuRepository(
         dio: dio,
-        productsBox: productsBox,
+        menuBox: menuBox,
         apiSiteUrl: apiSiteUrl,
       ),
+    );
+
+    // Регистрация репозиториев для admin
+    GetIt.I.registerLazySingleton<CategoriesRepository>(
+      () => CategoriesRepository(dio: dio, apiSiteUrl: apiSiteUrl),
+    );
+    GetIt.I.registerLazySingleton<ProductRepository>(
+      () => ProductRepository(dio: dio, apiSiteUrl: apiSiteUrl),
+    );
+    GetIt.I.registerLazySingleton<ProductVariantRepository>(
+      () => ProductVariantRepository(dio: dio, apiSiteUrl: apiSiteUrl),
+    );
+    GetIt.I.registerLazySingleton<ModifierRepository>(
+      () => ModifierRepository(
+          dio: dio, apiSiteUrl: apiSiteUrl),
+    );
+    GetIt.I.registerLazySingleton<ModifierGroupRepository>(
+      () => ModifierGroupRepository(
+          dio: dio, apiSiteUrl: apiSiteUrl),
+    );
+    GetIt.I.registerLazySingleton<ModifierGroupAssociationRepository>(
+      () =>
+          ModifierGroupAssociationRepository(dio: dio, apiSiteUrl: apiSiteUrl),
     );
 
     GetIt.I.registerSingleton<AbstractLoginRepository>(
@@ -121,29 +135,25 @@ void main() async {
       ),
     );
 
-    GetIt.I.registerSingleton<AbstractProfilesRepository>(
-      ProfilesRepository(
+    GetIt.I.registerSingleton<AbstractProfileRepository>(
+      ProfileRepository(
         dio: dio,
-        profilesBox: profilesBox,
         apiSiteUrl: apiSiteUrl,
       ),
+    );
+    
+    GetIt.I.registerLazySingleton<AbstractCartRepository>(
+      () =>
+          CartRepository(dio: dio, apiSiteUrl: apiSiteUrl),
     );
 
-    GetIt.I.registerSingleton<AbstractCartsRepository>(
-      CartsRepository(
-        dio: dio,
-        cartsBox: cartsBox,
-        apiSiteUrl: apiSiteUrl,
-      ),
-    );
-
-    GetIt.I.registerSingleton<AbstractOrdersRepository>(
-      OrdersRepository(
-        dio: dio,
-        ordersBox: ordersBox, // Используем ordersBox
-        apiSiteUrl: apiSiteUrl,
-      ),
-    );
+    // GetIt.I.registerSingleton<AbstractOrderRepository>(
+    //   OrderRepository(
+    //     dio: dio,
+    //     orderBox: orderBox,
+    //     apiSiteUrl: apiSiteUrl,
+    //   ),
+    // );
 
     FlutterError.onError =
         (details) => GetIt.I<Talker>().handle(details.exception, details.stack);

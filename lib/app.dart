@@ -1,25 +1,26 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_restaraunt/core/router/router.dart';
 import 'package:flutter_application_restaraunt/core/theme/theme.dart';
 import 'package:get_it/get_it.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_application_restaraunt/features/users/admin/view/admin_panel_screen.dart';
+import 'package:flutter_application_restaraunt/features/users/client/restaraunt/menu/view/menu_screen.dart';
+import 'core/repositories/services/jwt_tokens/abstract_jwt_tokens_repository.dart';
 
-class FlutterApplicationRestaraunt extends StatefulWidget {
+class FlutterApplicationRestaraunt extends StatelessWidget {
   const FlutterApplicationRestaraunt({super.key});
 
   @override
-  State<FlutterApplicationRestaraunt> createState() => _AppState();
-}
-
-class _AppState extends State<FlutterApplicationRestaraunt> {
-  final _appRouter = AppRouter();
-
-  @override
   Widget build(BuildContext context) {
+    final _appRouter = AppRouter();
     return MaterialApp.router(
-      title: 'DonerKebab',
-      theme: darkTheme,
+      debugShowCheckedModeBanner: false,
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: ThemeMode.system,
+      routerConfig: _appRouter.config(),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -27,19 +28,8 @@ class _AppState extends State<FlutterApplicationRestaraunt> {
       ],
       supportedLocales: const [
         Locale('ru', 'RU'),
-        Locale('en', ''),
+        Locale('en', 'US'),
       ],
-      builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            viewInsets: MediaQuery.of(context).viewInsets,
-          ),
-          child: child!,
-        );
-      },
-      routerConfig: _appRouter.config(
-        navigatorObservers: () => [TalkerRouteObserver(GetIt.I<Talker>())],
-      ),
     );
   }
 }

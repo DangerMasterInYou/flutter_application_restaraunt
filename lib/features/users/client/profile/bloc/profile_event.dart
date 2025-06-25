@@ -1,6 +1,10 @@
+// profile_event.dart
+
 part of 'profile_bloc.dart';
 
-abstract class ProfileEvent extends Equatable {}
+abstract class ProfileEvent extends Equatable {
+  const ProfileEvent();
+}
 
 class LoadProfile extends ProfileEvent {
   LoadProfile({
@@ -13,24 +17,22 @@ class LoadProfile extends ProfileEvent {
   List<Object?> get props => [completer];
 }
 
-class ResetPassword extends ProfileEvent {
-  ResetPassword({
-    required this.profile,
+// Событие теперь принимает ProfilePatchDTO
+class UpdateProfile extends ProfileEvent {
+  const UpdateProfile({
+    required this.patchDto,
   });
 
-  final Profile profile;
+  final ProfilePatchDTO patchDto;
 
   @override
-  List<Object?> get props => [profile];
+  List<Object?> get props => [patchDto];
 }
 
-class UpdateProfile extends ProfileEvent {
-  UpdateProfile({
-    required this.profile,
-  });
-
-  final Profile profile;
+// Событие ResetPassword удалено
+class DeleteProfile extends ProfileEvent {
+  const DeleteProfile();
 
   @override
-  List<Object?> get props => [profile];
+  List<Object?> get props => [];
 }

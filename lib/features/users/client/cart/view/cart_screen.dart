@@ -5,14 +5,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
+import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../../../../../core/repositories/users/client/restaraunt/carts/carts.dart';
 import '/core/router/router.dart';
 import '../bloc/cart_bloc.dart';
 import '../widgets/widgets.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '/core/repositories/users/client/restaraunt/carts/carts.dart';
+import '/core/router/router.dart';
+import '../bloc/cart_bloc.dart';
+import '../widgets/widgets.dart';
+// lib/features/cart/presentation/view/cart_screen.dart
+
+import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+
+import '../bloc/cart_bloc.dart';
+import '../widgets/widgets.dart'; 
 
 part 'cart_items_screen.dart';
 part 'cart_comment_screen.dart';
 part 'cart_payment_screen.dart';
+// Предполагается, что здесь лежит CartProgressIndicator
+
+// УБИРАЕМ ВСЕ 'part' ДИРЕКТИВЫ
+
+// Этот enum может жить здесь или в отдельном файле
 
 @RoutePage()
 class CartScreen extends StatefulWidget {
@@ -23,7 +47,15 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  final CartBloc _cartBloc = CartBloc(GetIt.I<AbstractCartsRepository>());
+  // BLoC теперь создается и предоставляется здесь, чтобы быть доступным всем дочерним экранам
+  late final CartBloc _cartBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    // Используем AbstractCartRepository, а не AbstractCartsRepository
+    _cartBloc = CartBloc(GetIt.I<AbstractCartRepository>());
+  }
 
   @override
   void dispose() {
@@ -36,14 +68,16 @@ class _CartScreenState extends State<CartScreen> {
     return BlocProvider.value(
       value: _cartBloc,
       child: AutoTabsRouter.tabBar(
+        // Определяем маршруты для вкладок
         routes: const [
           CartItemsRoute(),
-          CartAddressRoute(),
+          CartCommentRoute(),
           CartPaymentRoute(),
         ],
         builder: (context, child, controller) {
           final tabsRouter = AutoTabsRouter.of(context);
-          
+
+          // Логика определения текущего шага для индикатора прогресса
           CartStep currentStep;
           switch (tabsRouter.activeIndex) {
             case 0:
@@ -58,7 +92,7 @@ class _CartScreenState extends State<CartScreen> {
             default:
               currentStep = CartStep.items;
           }
-          
+
           return Scaffold(
             appBar: AppBar(
               title: const Text('Оформление заказа'),
@@ -66,10 +100,12 @@ class _CartScreenState extends State<CartScreen> {
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
+                  // Логика кнопки "Назад"
                   if (tabsRouter.activeIndex > 0) {
                     tabsRouter.setActiveIndex(tabsRouter.activeIndex - 1);
                   } else {
-                    context.router.navigate(const MenuRoute());
+                    // Если мы на первом шаге, выходим из корзины
+                    context.router.pop();
                   }
                 },
               ),
@@ -79,9 +115,10 @@ class _CartScreenState extends State<CartScreen> {
                 constraints: const BoxConstraints(maxWidth: 900),
                 child: Column(
                   children: [
+                    // Ваш виджет индикатора прогресса
                     CartProgressIndicator(currentStep: currentStep),
                     Expanded(
-                      child: child,
+                      child: child, // Здесь будет отображаться текущий экран (вкладка)
                     ),
                   ],
                 ),

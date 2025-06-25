@@ -1,98 +1,120 @@
+// lib/features/users/client/cart/view/cart_comment_screen.dart
+
 part of 'cart_screen.dart';
 
 @RoutePage()
-class CartAddressScreen extends StatefulWidget {
-  const CartAddressScreen({super.key});
+class CartCommentScreen extends StatefulWidget {
+  const CartCommentScreen({super.key});
 
   @override
-  State<CartAddressScreen> createState() => _CartAddressScreenState();
+  State<CartCommentScreen> createState() => _CartCommentScreenState();
 }
 
-class _CartAddressScreenState extends State<CartAddressScreen> {
+class _CartCommentScreenState extends State<CartCommentScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _streetController = TextEditingController();
-  final _houseController = TextEditingController();
-  final _apartmentController = TextEditingController();
-  final _entranceController = TextEditingController();
-  final _floorController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _commentController = TextEditingController();
-  
-  bool _addressValidated = false;
+
+  final _phoneFormatter = MaskTextInputFormatter(
+    mask: '+7 (###) ###-##-##',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
 
   @override
   void dispose() {
-    _streetController.dispose();
-    _houseController.dispose();
-    _apartmentController.dispose();
-    _entranceController.dispose();
-    _floorController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
     _commentController.dispose();
     super.dispose();
   }
-  
-  void _onAddressValidated() {
-    setState(() {
-      _addressValidated = true;
-    });
+
+  void _continue() {
+    // Проверяем, валидна ли форма (заполнены ли обязательные поля)
+    if (_formKey.currentState?.validate() ?? false) {
+      // Если все корректно, переходим на следующий шаг
+      AutoTabsRouter.of(context).setActiveIndex(2);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 24),
-            
             const SizedBox(height: 16),
-            
+            Text(
+              'Контактные данные',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 24),
+
+            // --- ПОЛЕ ИМЕНИ ---
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Имя*',
+                hintText: 'Введите ваше имя',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+              keyboardType: TextInputType.name,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Пожалуйста, введите ваше имя';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // --- ПОЛЕ НОМЕРА ТЕЛЕФОНА ---
+            TextFormField(
+              controller: _phoneController,
+              decoration: const InputDecoration(
+                labelText: 'Номер телефона*',
+                hintText: '+7 (999) 123-45-67',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+              inputFormatters: [_phoneFormatter],
+              validator: (value) {
+                if (!_phoneFormatter.isFill()) {
+                  return 'Пожалуйста, введите полный номер телефона';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // --- ПОЛЕ КОММЕНТАРИЯ (НЕОБЯЗАТЕЛЬНОЕ) ---
             TextFormField(
               controller: _commentController,
               decoration: const InputDecoration(
                 labelText: 'Комментарий к заказу',
+                hintText: 'Например, "без лука"',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.comment),
+                prefixIcon: Icon(Icons.comment_bank_outlined),
               ),
               maxLines: 3,
-              style: theme.textTheme.labelSmall,
             ),
-            
             const SizedBox(height: 24),
-            
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      context.router.navigate(const CartItemsRoute());
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Назад'),
-                  ),
+
+            SizedBox(
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _continue,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.router.navigate(const CartPaymentRoute());
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: const Text('Продолжить'),
-                  ),
-                ),
-              ],
+                child: const Text('К выбору оплаты'),
+              ),
             ),
           ],
         ),

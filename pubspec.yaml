@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
+  image_picker: ^1.1.2  # Updated to a compatible version
+  image_picker_for_web: ^3.0.6  # Keep this version
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.10
   dio: ^5.8.0+1

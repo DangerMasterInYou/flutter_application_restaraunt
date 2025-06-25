@@ -248,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (value == null || value.isEmpty) {
                                 return 'Пожалуйста, введите email';
                               }
-                              if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value)) {
+                              if (!RegExp(r'^(?!.*\.\.)(?!.*\.$)(?!^\.)[^\s@]+@[^\s@]+\.[^\s@]+(?<!\.)$').hasMatch(value)) {
                                 return 'Пожалуйста, введите корректный email';
                               }
                               return null;

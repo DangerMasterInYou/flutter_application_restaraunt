@@ -1,5 +1,7 @@
 import '../profile.dart';
-abstract class AbstractProfilesRepository {
-  Future<Profile> getProfile();
-  Future<void> postResetPassword(Profile cart);
+
+abstract class AbstractProfileRepository {
+  Future<ProfileResponse> getProfile();
+  Future<void> patchProfile(ProfilePatchDTO patchDto);
+  Future<void> deleteProfile(); 
 }

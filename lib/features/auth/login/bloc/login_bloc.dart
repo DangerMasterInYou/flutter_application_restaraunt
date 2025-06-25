@@ -15,7 +15,6 @@ part 'login_state.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   LoginBloc(this.loginRepository) : super(LoginInitial()) {
-    on<SubmitLogin>(_submitLogin);
     on<SendVerificationCodeEvent>(_handleSendVerificationCode);
     on<VerifyCodeEvent>(_handleVerifyCode);
     on<ChangeEmailEvent>(_handleChangeEmail);
@@ -24,27 +23,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
   final AbstractLoginRepository loginRepository;
   String _currentEmail = '';
-
-  Future<void> _submitLogin(
-    SubmitLogin event,
-    Emitter<LoginState> emit,
-  ) async {
-    try {
-      emit(LoginLoading());
-      final token = await loginRepository.postLogin(event.email, event.password);
-      if (token != null) {
-        emit(LoginLoaded(token: token));
-      } else {
-        emit(LoginFailure(email: event.email, exception: Exception('Получен невалидный ответ: $token')));
-      }
-    } catch (e, st) {
-      final attempts = e is AttemptsExceededException ? e.attemptsLeft : 5;
-      emit(LoginFailure(email: event.email, exception: e, attemptsLeft: attempts));
-      GetIt.I<Talker>().handle(e, st);
-    } finally {
-      event.completer?.complete();
-    }
-  }
 
   Future<void> _handleSendVerificationCode(
     SendVerificationCodeEvent event,
@@ -57,7 +35,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       if (success) {
         emit(VerificationCodeSentSuccess(email: event.email));
       } else {
-        emit(VerificationCodeSentFailure(exception: Exception('Не удалось отправить код')));
+        emit(VerificationCodeSentFailure(
+            exception: Exception('Не удалось отправить код')));
       }
     } catch (e, st) {
       emit(VerificationCodeSentFailure(exception: e));
@@ -77,9 +56,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       if (token != null) {
         emit(LoginSuccess(token: token));
         try {
-          GetIt.I<AbstractOrdersRepository>().initiateWebSocketConnection();
+          // GetIt.I<AbstractOrdersRepository>().initiateWebSocketConnection();
         } catch (e, st) {
-          GetIt.I<Talker>().handle(e, st, 'Failed to initiate WebSocket connection after login');
+          GetIt.I<Talker>().handle(
+              e, st, 'Failed to initiate WebSocket connection after login');
         }
       } else {
         throw Exception('Не удалось верифицировать код');
@@ -91,7 +71,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           final blockUntil = DateTime.now().add(LoginRepository.blockDuration);
           emit(LoginBlocked(blockUntil: blockUntil));
         } else {
-          emit(LoginFailure(email: event.email, exception: e, attemptsLeft: e.attemptsLeft));
+          emit(LoginFailure(
+              email: event.email, exception: e, attemptsLeft: e.attemptsLeft));
         }
       } else {
         emit(LoginFailure(email: event.email, exception: e));

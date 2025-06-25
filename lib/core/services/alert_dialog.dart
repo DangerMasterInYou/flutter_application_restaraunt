@@ -26,7 +26,7 @@ void showMyAlertDialog(BuildContext context, {
           content,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.black54,
+            color: Colors.black,
             fontSize: 14,
           ),
         ),

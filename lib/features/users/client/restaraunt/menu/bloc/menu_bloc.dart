@@ -6,27 +6,22 @@ import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
-import '/core/repositories/users/client/restaraunt/products/products.dart';
+import '../../../../../../core/repositories/restaraunt/menu/menu.dart'; // Assuming this is the correct path for AbstractMenuRepository
 import '/core/repositories/users/client/restaraunt/carts/carts.dart';
-import '/core/hive/models/models.dart';
-import '/core/hive/models/product_full/category/category.dart';
-
-import '/core/repositories/services/jwt_tokens/jwt_tokens.dart';
+import '/core/hive/models/menu/menu.dart'; // For Menu model
+// import '/core/hive/models/cart_item/cart_item.dart'; // For CartItem model if used in AddItemCartMenu event
 
 part 'menu_event.dart';
 part 'menu_state.dart';
 
 class MenuBloc extends Bloc<MenuEvent, MenuState> {
-  MenuBloc(
-      this.jwtTokensRepository, this.productsRepository, this.cartsRepository)
-      : super(MenuInitial()) {
+  MenuBloc(this.menuRepository) : super(MenuInitial()) {
     on<LoadMenu>(_load);
-    on<AddItemCartMenu>(_addToCart);
+    // on<AddItemCartMenu>(_addToCart);
   }
 
-  final AbstractJWTTokensRepository jwtTokensRepository;
-  final AbstractProductsRepository productsRepository;
-  final AbstractCartsRepository cartsRepository;
+  final AbstractMenuRepository menuRepository;
+  // final AbstractCartsRepository cartsRepository;
 
   Future<void> _load(
     LoadMenu event,
@@ -44,38 +39,24 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
       //   );
       // } catch (e, st) {
       //   GetIt.I<Talker>().handle(e, st);
-      //   isTokenValid = false;
-      // }
-
-      // if (!isTokenValid) {
-      //   emit(LoginInvalid());
-      //   return;
-      // }
-
-      List<Product> products = [];
+      List<Menu> menuList = [];
       try {
-        products = await _withTimeout(productsRepository.getProductsList(),
-            const Duration(seconds: 5), 'Products list fetch timeout');
-        if (products.isEmpty) {
-          throw Exception('No products found');
+        menuList = await _withTimeout(
+          menuRepository.getMenuList(),
+          const Duration(
+              seconds: 10), // Increased timeout for potentially larger data
+          'Menu list fetch timeout',
+        );
+        if (menuList.isEmpty) {
+          throw Exception('Menu not found (404)');
         }
       } catch (e, st) {
         GetIt.I<Talker>().handle(e, st);
+        // Re-throw to be caught by the outer try-catch, which emits MenuLoadingFailure
         throw Exception('Failed to load menu items: $e');
       }
 
-      // Получаем ProductFull для каждого продукта
-      final List<ProductFull> productsList = [];
-      for (final product in products) {
-        final full = await productsRepository.getFullProduct(product.id);
-        if (full != null) {
-          productsList.add(full);
-        }
-      }
-      // Загружаем категории из Hive
-      final categoryBox = Hive.box<Category>('categories_box');
-      final categories = categoryBox.values.toList();
-      emit(MenuLoaded(productsList: productsList, categories: categories));
+      emit(MenuLoaded(menuList: menuList));
     } catch (e, st) {
       emit(MenuLoadingFailure(exception: e));
       GetIt.I<Talker>().handle(e, st);
@@ -92,23 +73,23 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
     );
   }
 
-  Future<void> _addToCart(
-    AddItemCartMenu event,
-    Emitter<MenuState> emit,
-  ) async {
-    try {
-      await cartsRepository.postAddItemCart(event.cartItem);
-      emit(MenuLoading());
-      await _load(LoadMenu(), emit);
-    } catch (e, st) {
-      GetIt.I<Talker>().handle(e, st);
-      await _load(LoadMenu(), emit);
-    }
-  }
+  // Future<void> _addToCart(
+  //   AddItemCartMenu event,
+  //   Emitter<MenuState> emit,
+  // ) async {
+  //   try {
+  //     // await cartsRepository.postAddItemCart(event.cartItem);
+  //     emit(MenuLoading());
+  //     await _load(LoadMenu(), emit);
+  //   } catch (e, st) {
+  //     GetIt.I<Talker>().handle(e, st);
+  //     await _load(LoadMenu(), emit);
+  //   }
+  // }
 
-  @override
-  void onError(Object error, StackTrace stackTrace) {
-    super.onError(error, stackTrace);
-    GetIt.I<Talker>().handle(error, stackTrace);
-  }
+  // @override
+  // void onError(Object error, StackTrace stackTrace) {
+  //   super.onError(error, stackTrace);
+  //   GetIt.I<Talker>().handle(error, stackTrace);
+  // }
 }

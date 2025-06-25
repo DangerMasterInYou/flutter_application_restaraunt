@@ -21,15 +21,13 @@ class MenuLoading extends MenuState {
 
 class MenuLoaded extends MenuState {
   MenuLoaded({
-    required this.productsList,
-    required this.categories,
+    required this.menuList,
   });
 
-  final List<ProductFull> productsList;
-  final List<Category> categories;
+  final List<Menu> menuList;
 
   @override
-  List<Object?> get props => [productsList, categories];
+  List<Object?> get props => [menuList];
 }
 
 class MenuLoadingFailure extends MenuState {

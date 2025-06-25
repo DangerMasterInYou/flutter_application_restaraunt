@@ -1,20 +1,14 @@
-import 'dart:async';
-
-import 'package:get_it/get_it.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get_it/get_it.dart';
 import '/core/services/alert_dialog.dart';
-import '/core/repositories/services/jwt_tokens/jwt_tokens.dart';
-import '/core/repositories/users/client/restaraunt/products/products.dart';
-import '/core/repositories/users/client/restaraunt/carts/carts.dart';
-import '/core/hive/models/models.dart';
-import '../bloc/menu_bloc.dart';
-import '../../products/product_variant/widgets/widgets.dart';
+import '/core/hive/models/menu/menu.dart';
 import '../widgets/app_bar.dart';
-import '/core/router/router.dart';
-import 'package:hive/hive.dart';
+import '../widgets/tile_card.dart';
+import '../bloc/menu_bloc.dart';
+import 'package:flutter_application_restaraunt/core/repositories/restaraunt/menu/repository/abstract_menu.dart';
 
 @RoutePage()
 class MenuScreen extends StatefulWidget {
@@ -26,39 +20,12 @@ class MenuScreen extends StatefulWidget {
 
 class _MenuScreenState extends State<MenuScreen> {
   late final MenuBloc _menuBloc;
-  Category? _selectedCategory;
+  String? _selectedCategory;
 
   @override
   void initState() {
     super.initState();
-
-    ErrorWidget.builder = (FlutterErrorDetails details) {
-      return Container(
-        color: Colors.grey[200],
-        child: Center(
-          child: Text(
-            'Ошибка загрузки',
-            style: TextStyle(color: Colors.red),
-          ),
-        ),
-      );
-    };
-
-    _menuBloc = MenuBloc(
-      GetIt.I<AbstractJWTTokensRepository>(),
-      GetIt.I<AbstractProductsRepository>(),
-      GetIt.I<AbstractCartsRepository>(),
-    );
-    _menuBloc.add(LoadMenu());
-
-    _menuBloc.stream.listen((state) {
-      if (state is MenuLoaded) {
-        print('Загружено ${state.productsList.length} продуктов');
-        if (state.productsList.isNotEmpty) {
-          print('Первый продукт: ${state.productsList[0].product.name}');
-        }
-      }
-    });
+    _menuBloc = MenuBloc(GetIt.I<AbstractMenuRepository>())..add(LoadMenu());
   }
 
   @override
@@ -67,41 +34,10 @@ class _MenuScreenState extends State<MenuScreen> {
     super.dispose();
   }
 
-  List<ProductFull> _getFilteredProducts(List<ProductFull> products) {
-    if (_selectedCategory == null) {
-      return products;
-    }
-    return products
-        .where(
-            (productFull) => productFull.category?.id == _selectedCategory?.id)
-        .toList();
-  }
-
-  void _addToCart(ProductFull productFull) {
-    final variant =
-        productFull.variants.isNotEmpty ? productFull.variants.first : null;
-    final cartItem = Cart(
-      id: productFull.product.id,
-      name: productFull.product.name,
-      price: variant?.price ?? 0,
-      imageUrl: productFull.product.imageUrl,
-      count: 1,
-    );
-    _menuBloc.add(AddItemCartMenu(cartItem: cartItem));
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${productFull.product.name} добавлен в корзину'),
-        action: SnackBarAction(
-          label: 'Перейти в корзину',
-          onPressed: () {
-            AutoRouter.of(context).push(CartRoute());
-          },
-        ),
-        duration: const Duration(seconds: 2),
-        backgroundColor: Theme.of(context).primaryColor,
-      ),
-    );
+  List<Menu> _getFilteredMenu(List<Menu> menuList) {
+    return _selectedCategory == null
+        ? menuList
+        : menuList.where((m) => m.category == _selectedCategory).toList();
   }
 
   @override
@@ -110,316 +46,226 @@ class _MenuScreenState extends State<MenuScreen> {
     final isWideScreen = screenWidth >= 800;
     final theme = Theme.of(context);
 
-    return BlocProvider.value(
-      value: _menuBloc,
-      child: Builder(
-        builder: (context) {
-          return Scaffold(
-            resizeToAvoidBottomInset: false,
-            body: CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  title: isWideScreen
-                      ? null
-                      : Text('Меню', style: theme.textTheme.titleMedium),
-                  leading: isWideScreen
-                      ? Center(
-                          child: Container(
-                            height: 60,
-                            width: 60,
-                            padding: const EdgeInsets.all(4),
-                            margin: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                            ),
-                            child: ClipOval(
-                              child: SvgPicture.asset(
-                                'assets/svg/logo.svg',
-                                fit: BoxFit.contain,
-                                height: 60,
-                                width: 60,
-                              ),
-                            ),
-                          ),
-                        )
-                      : SizedBox(
-                          width: 80,
-                          child: Container(
-                            height: 40,
-                            width: 40,
-                            padding: const EdgeInsets.all(4),
-                            margin: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                            ),
-                            child: ClipOval(
-                              child: SvgPicture.asset(
-                                'assets/svg/logo.svg',
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                          ),
-                        ),
-                  actions: isWideScreen
-                      ? (buildWideAppBar(context) as AppBar).actions
-                      : (buildNarrowAppBar(context) as AppBar).actions,
-                  floating: true,
-                  pinned: true,
-                  snap: false,
-                  flexibleSpace: isWideScreen
-                      ? FlexibleSpaceBar(
-                          titlePadding:
-                              const EdgeInsets.only(left: 50, right: 100),
-                          title: TextButton.icon(
-                            icon: Icon(Icons.location_city,
-                                color: theme.iconTheme.color, size: 40),
-                            label: Text('Ханты-Мансийск, Калинина, 22',
-                                style: theme.textTheme.bodyMedium,
-                                textAlign: TextAlign.center),
-                            onPressed: null,
-                          ),
-                        )
-                      : null,
-                ),
-                SliverToBoxAdapter(
-                  child: BlocBuilder<MenuBloc, MenuState>(
-                    bloc: _menuBloc,
-                    builder: (context, state) {
-                      final theme = Theme.of(context);
+    return BlocProvider(
+      create: (context) => _menuBloc,
+      child: Scaffold(
+        body: BlocConsumer<MenuBloc, MenuState>(
+          listener: (context, state) {
+            if (state is MenuLoadingFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Ошибка загрузки')),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is MenuLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-                      if (state is MenuLoading) {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      } else if (state is MenuLoadingFailure) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Не удалось загрузить меню.',
-                                style: theme.textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Попробовать снова',
-                                style: theme.textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: 8),
-                              IconButton(
-                                icon: const Icon(Icons.refresh, size: 80),
-                                onPressed: () {
-                                  _menuBloc.add(LoadMenu());
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      } else if (state is MenuLoaded) {
-                        final filteredProducts =
-                            _getFilteredProducts(state.productsList);
-                        final categories = state.categories;
-
-                        if (filteredProducts.isEmpty) {
-                          return Center(
-                            child: Text(
-                              'Продукты не найдены',
-                              style: theme.textTheme.headlineSmall,
-                            ),
-                          );
-                        }
-
-                        int crossAxisCount;
-                        if (screenWidth > 1200) {
-                          crossAxisCount = 4;
-                        } else if (screenWidth > 900) {
-                          crossAxisCount = 3;
-                        } else if (screenWidth > 600) {
-                          crossAxisCount = 2;
-                        } else {
-                          crossAxisCount = 1;
-                        }
-
-                        return Center(
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 1500),
-                            width: double.infinity,
-                            height: MediaQuery.of(context).size.height,
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 8.0),
-                                  color: theme.scaffoldBackgroundColor
-                                      .withOpacity(0.95),
-                                  child: Wrap(
-                                    spacing: 8.0,
-                                    runSpacing: 8.0,
-                                    alignment: WrapAlignment.start,
-                                    children: [
-                                      const SizedBox(width: 8),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 4.0),
-                                        child: ElevatedButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              _selectedCategory = null;
-                                            });
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                _selectedCategory == null
-                                                    ? theme.primaryColor
-                                                    : theme.elevatedButtonTheme
-                                                        .style?.backgroundColor
-                                                        ?.resolve({}),
-                                            foregroundColor:
-                                                _selectedCategory == null
-                                                    ? const Color(0xFF1A1A1A)
-                                                    : theme.elevatedButtonTheme
-                                                        .style?.foregroundColor
-                                                        ?.resolve({}),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              side: BorderSide(
-                                                color: _selectedCategory == null
-                                                    ? Colors.transparent
-                                                    : Colors.white
-                                                        .withOpacity(0.2),
-                                              ),
-                                            ),
-                                          ),
-                                          child: const Text('Все категории'),
-                                        ),
-                                      ),
-                                      ...categories.map((category) {
-                                        return Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 4.0),
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                _selectedCategory = category;
-                                              });
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  _selectedCategory?.id ==
-                                                          category.id
-                                                      ? theme.primaryColor
-                                                      : theme
-                                                          .elevatedButtonTheme
-                                                          .style
-                                                          ?.backgroundColor
-                                                          ?.resolve({}),
-                                              foregroundColor:
-                                                  _selectedCategory?.id ==
-                                                          category.id
-                                                      ? const Color(0xFF1A1A1A)
-                                                      : theme
-                                                          .elevatedButtonTheme
-                                                          .style
-                                                          ?.foregroundColor
-                                                          ?.resolve({}),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                side: BorderSide(
-                                                  color:
-                                                      _selectedCategory?.id ==
-                                                              category.id
-                                                          ? Colors.transparent
-                                                          : Colors.white
-                                                              .withOpacity(0.2),
-                                                ),
-                                              ),
-                                            ),
-                                            child: Text(category.name),
-                                          ),
-                                        );
-                                      }).toList(),
-                                      const SizedBox(width: 8),
-                                    ],
-                                  ),
-                                ),
-                                Expanded(
-                                  child: RefreshIndicator(
-                                    onRefresh: () async {
-                                      final completer = Completer();
-                                      _menuBloc
-                                          .add(LoadMenu(completer: completer));
-                                      return completer.future;
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: GridView.builder(
-                                        gridDelegate:
-                                            SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: crossAxisCount,
-                                          childAspectRatio: 0.75,
-                                          crossAxisSpacing: 12,
-                                          mainAxisSpacing: 12,
-                                          mainAxisExtent:
-                                              screenWidth <= 300 ? 400 : null,
-                                        ),
-                                        itemCount: filteredProducts.length,
-                                        itemBuilder: (context, index) {
-                                          final productFull =
-                                              filteredProducts[index];
-                                          return ProductTileCard(
-                                            product: productFull,
-                                            onAddToCart: () =>
-                                                _addToCart(productFull),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            floatingActionButton: BlocBuilder<MenuBloc, MenuState>(
-              bloc: _menuBloc,
-              builder: (BuildContext context, MenuState state) {
-                final theme = Theme.of(context);
-
-                if (state is MenuLoaded) {
-                  return SizedBox(
-                    width: 90.0,
-                    height: 90.0,
-                    child: FloatingActionButton(
-                      onPressed: () {
-                        context.router.push(const CartRoute());
-                      },
-                      backgroundColor: theme.primaryColor,
-                      tooltip: 'Корзина',
-                      child: const Icon(Icons.shopping_cart,
-                          size: 50.0, color: Colors.black),
+            if (state is MenuLoadingFailure) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Ошибка загрузки', style: theme.textTheme.titleLarge),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () => _menuBloc.add(LoadMenu()),
+                      child: const Text('Повторить'),
                     ),
-                  );
-                } else {
-                  return Container();
-                }
-              },
+                  ],
+                ),
+              );
+            }
+
+            if (state is MenuLoaded) {
+              final categories = state.menuList
+                  .map((m) => m.category)
+                  .toSet()
+                  .toList()
+                ..sort();
+
+              final filteredMenu = _getFilteredMenu(state.menuList);
+              final crossAxisCount = _calculateCrossAxisCount(screenWidth);
+              final isNarrow = crossAxisCount == 1;
+
+              return CustomScrollView(
+                slivers: [
+                  _buildAppBar(isWideScreen, theme),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    sliver: SliverToBoxAdapter(
+                      child: _buildCategoryButtons(categories, theme),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: isNarrow
+                        ? _buildMenuList(filteredMenu, isNarrow: true)
+                        : _buildMenuGrid(filteredMenu, crossAxisCount, isNarrow: false),
+                  ),
+                ],
+              );
+            }
+
+            return const Center(child: Text('Неизвестное состояние'));
+          },
+        ),
+      ),
+    );
+  }
+
+  // Строит список для узких экранов
+  SliverList _buildMenuList(List<Menu> filteredMenu, {required bool isNarrow}) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final menu = filteredMenu[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: MenuTileCard(
+              data: menu,
+              isNarrow: isNarrow,
+              onAddToCart: () => _addToCart(context, menu),
             ),
           );
         },
+        childCount: filteredMenu.length,
+      ),
+    );
+  }
+
+  // Строит сетку для широких экранов
+  SliverGrid _buildMenuGrid(List<Menu> filteredMenu, int crossAxisCount, {required bool isNarrow}) {
+    return SliverGrid(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final menu = filteredMenu[index];
+          return MenuTileCard(
+            data: menu,
+            isNarrow: isNarrow,
+            onAddToCart: () => _addToCart(context, menu),
+          );
+        },
+        childCount: filteredMenu.length,
+      ),
+    );
+  }
+
+  int _calculateCrossAxisCount(double screenWidth) {
+    if (screenWidth > 1200) return 4;
+    if (screenWidth > 900) return 3;
+    if (screenWidth > 600) return 2;
+    return 1;
+  }
+
+  SliverAppBar _buildAppBar(bool isWideScreen, ThemeData theme) {
+    return SliverAppBar(
+      leading: isWideScreen
+          ? Padding(
+              padding: const EdgeInsets.only(left: 15),
+              child: _buildLogo(60),
+            )
+          : SizedBox(
+              width: 80,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 15),
+                child: _buildLogo(40),
+              ),
+            ),
+      title: isWideScreen ? (buildWideAppBar(context) as AppBar).title : Text('Меню', style: theme.textTheme.titleMedium),
+      actions: isWideScreen
+          ? (buildWideAppBar(context) as AppBar).actions
+          : (buildNarrowAppBar(context) as AppBar).actions,
+      floating: true,
+      pinned: true,
+      snap: false,
+      expandedHeight: isWideScreen ? 0 : null,
+    );
+  }
+
+  Widget _buildLogo(double size) {
+    return Center(
+      child: Container(
+        height: size,
+        width: size,
+        padding: const EdgeInsets.all(4),
+        margin: const EdgeInsets.all(5),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+        ),
+        child: ClipOval(
+          child: SvgPicture.asset(
+            'assets/svg/logo.svg',
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryButtons(List<String> categories, ThemeData theme) {
+    // Оборачиваем Row в SingleChildScrollView для горизонтальной прокрутки
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        children: [
+          _buildCategoryButton(null, 'Все категории', theme),
+          ...categories.map(
+              (category) => _buildCategoryButton(category, category, theme)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryButton(String? category, String text, ThemeData theme) {
+    final isSelected = _selectedCategory == category;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: ElevatedButton(
+        onPressed: () => setState(() => _selectedCategory = category),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isSelected
+              ? theme.primaryColor
+              : theme.elevatedButtonTheme.style?.backgroundColor?.resolve({}),
+          foregroundColor: isSelected
+              ? const Color(0xFF1A1A1A)
+              : theme.elevatedButtonTheme.style?.foregroundColor?.resolve({}),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: isSelected
+                  ? Colors.transparent
+                  : Colors.white.withOpacity(0.2),
+            ),
+          ),
+        ),
+        child: Text(text),
+      ),
+    );
+  }
+
+  void _addToCart(BuildContext context, Menu menu) {
+    // Реализация добавления в корзину
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Добавлено'),
+        content: Text('${menu.name} добавлен в корзину', style: TextStyle(color: Colors.black),),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK', style: TextStyle(color: Colors.black),),
+          ),
+        ],
       ),
     );
   }

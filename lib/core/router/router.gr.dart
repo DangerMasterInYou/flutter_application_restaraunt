@@ -15,10 +15,16 @@ abstract class _$AppRouter extends RootStackRouter {
 
   @override
   final Map<String, PageFactory> pagesMap = {
-    CartAddressRoute.name: (routeData) {
+    AdminPanelRoute.name: (routeData) {
       return AutoRoutePage<dynamic>(
         routeData: routeData,
-        child: const CartAddressScreen(),
+        child: const AdminPanelScreen(),
+      );
+    },
+    CartCommentRoute.name: (routeData) {
+      return AutoRoutePage<dynamic>(
+        routeData: routeData,
+        child: const CartCommentScreen(),
       );
     },
     CartItemsRoute.name: (routeData) {
@@ -51,22 +57,13 @@ abstract class _$AppRouter extends RootStackRouter {
         child: const MenuScreen(),
       );
     },
-    OrdersRoute.name: (routeData) {
-      return AutoRoutePage<dynamic>(
-        routeData: routeData,
-        child: const OrdersScreen(),
-      );
-    },
     ProductRoute.name: (routeData) {
-      final pathParams = routeData.inheritedPathParams;
-      final args = routeData.argsAs<ProductRouteArgs>(
-          orElse: () => ProductRouteArgs(
-              productName: pathParams.getString('productName')));
+      final args = routeData.argsAs<ProductRouteArgs>();
       return AutoRoutePage<dynamic>(
         routeData: routeData,
         child: ProductScreen(
           key: args.key,
-          productName: args.productName,
+          id: args.id,
         ),
       );
     },
@@ -80,15 +77,29 @@ abstract class _$AppRouter extends RootStackRouter {
 }
 
 /// generated route for
-/// [CartAddressScreen]
-class CartAddressRoute extends PageRouteInfo<void> {
-  const CartAddressRoute({List<PageRouteInfo>? children})
+/// [AdminPanelScreen]
+class AdminPanelRoute extends PageRouteInfo<void> {
+  const AdminPanelRoute({List<PageRouteInfo>? children})
       : super(
-          CartAddressRoute.name,
+          AdminPanelRoute.name,
           initialChildren: children,
         );
 
-  static const String name = 'CartAddressRoute';
+  static const String name = 'AdminPanelRoute';
+
+  static const PageInfo<void> page = PageInfo<void>(name);
+}
+
+/// generated route for
+/// [CartCommentScreen]
+class CartCommentRoute extends PageRouteInfo<void> {
+  const CartCommentRoute({List<PageRouteInfo>? children})
+      : super(
+          CartCommentRoute.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'CartCommentRoute';
 
   static const PageInfo<void> page = PageInfo<void>(name);
 }
@@ -164,33 +175,18 @@ class MenuRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [OrdersScreen]
-class OrdersRoute extends PageRouteInfo<void> {
-  const OrdersRoute({List<PageRouteInfo>? children})
-      : super(
-          OrdersRoute.name,
-          initialChildren: children,
-        );
-
-  static const String name = 'OrdersRoute';
-
-  static const PageInfo<void> page = PageInfo<void>(name);
-}
-
-/// generated route for
 /// [ProductScreen]
 class ProductRoute extends PageRouteInfo<ProductRouteArgs> {
   ProductRoute({
     Key? key,
-    required String productName,
+    required int id,
     List<PageRouteInfo>? children,
   }) : super(
           ProductRoute.name,
           args: ProductRouteArgs(
             key: key,
-            productName: productName,
+            id: id,
           ),
-          rawPathParams: {'productName': productName},
           initialChildren: children,
         );
 
@@ -203,16 +199,16 @@ class ProductRoute extends PageRouteInfo<ProductRouteArgs> {
 class ProductRouteArgs {
   const ProductRouteArgs({
     this.key,
-    required this.productName,
+    required this.id,
   });
 
   final Key? key;
 
-  final String productName;
+  final int id;
 
   @override
   String toString() {
-    return 'ProductRouteArgs{key: $key, productName: $productName}';
+    return 'ProductRouteArgs{key: $key, id: $id}';
   }
 }
 

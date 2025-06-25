@@ -6,7 +6,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import 'package:hive/hive.dart';
-import '/core/hive/models/uid_manager/uid_manager.dart';
 
 class AttemptsExceededException implements Exception {
   final String message;
@@ -58,60 +57,10 @@ class LoginRepository implements AbstractLoginRepository {
   final tokenkey = 1;
 
   @override
-  Future<Token?> postLogin(String email, String password) async {
-    try {
-      final token = await _sendLoginRequest(email, password);
-      return token;
-    } catch (e, st) {
-      GetIt.instance<Talker>().handle(e, st);
-      return null;
-    }
-  }
-
-  Future<Token> _sendLoginRequest(String email, String password) async {
-    try {
-      final loginDTO = LoginDTO(
-        email: email,
-        password: password
-      ).toJson();
-
-      final response = await dio.post('$apiSiteUrl/login',
-        data: loginDTO);
-
-      if (response.statusCode != 200) {
-        throw Exception('Ошибка при загрузке данных: ${response.statusCode}');
-      }
-      
-      if (response.data is Map<String, dynamic> && 
-          response.data['access'] != null && 
-          response.data['refresh'] != null) {
-        
-        final token = Token.fromJson(response.data);
-        
-        await tokenBox.put(tokenkey, token);
-        return token;
-      } else {
-        throw Exception('Ответ сервера не содержит необходимые токены: ${response.data}');
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 422) {
-        throw Exception('Неверный формат данных: ${e.response?.data}');
-      } else if (e.response?.statusCode == 401) {
-        throw Exception('Неверный логин или пароль');
-      } else {
-        throw Exception('Ошибка соединения с сервером: ${e.message}');
-      }
-    }
-    catch (e) {
-      throw Exception('Ошибка при загрузке данных: $e');
-    }
-  }
-
-  @override
   Future<bool> sendVerificationCode(String email) async {
     try {
       final sendCodeDTO = '{"email": "$email"}';
-      final response = await dio.post('$apiSiteUrl/api/v1/send-code', data: sendCodeDTO);
+      final response = await dio.post('$apiSiteUrl/auth/send-code', data: sendCodeDTO);
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
@@ -136,7 +85,7 @@ class LoginRepository implements AbstractLoginRepository {
     }
     try {
       final verifyCodeDTO = '{"email": "$email", "code": "$code"}';
-      final response = await dio.post('$apiSiteUrl/api/v1/verify-code', data: verifyCodeDTO);
+      final response = await dio.post('$apiSiteUrl/auth/verify-code', data: verifyCodeDTO);
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
