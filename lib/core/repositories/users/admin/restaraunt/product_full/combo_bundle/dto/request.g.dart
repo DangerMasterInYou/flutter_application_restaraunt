@@ -33,11 +33,17 @@ ComboBundlePatchDTO _$ComboBundlePatchDTOFromJson(Map<String, dynamic> json) =>
       quantity: (json['quantity'] as num?)?.toInt(),
     );
 
-Map<String, dynamic> _$ComboBundlePatchDTOToJson(
-        ComboBundlePatchDTO instance) =>
-    <String, dynamic>{
-      if (instance.comboVariantId case final value?) 'combo_variant_id': value,
-      if (instance.includedVariantIds case final value?)
-        'included_variant_ids': value,
-      if (instance.quantity case final value?) 'quantity': value,
-    };
+Map<String, dynamic> _$ComboBundlePatchDTOToJson(ComboBundlePatchDTO instance) {
+  final val = <String, dynamic>{};
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('combo_variant_id', instance.comboVariantId);
+  writeNotNull('included_variant_ids', instance.includedVariantIds);
+  writeNotNull('quantity', instance.quantity);
+  return val;
+}

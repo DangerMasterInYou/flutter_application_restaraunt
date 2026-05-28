@@ -31,9 +31,17 @@ ModifierGroupPatchDTO _$ModifierGroupPatchDTOFromJson(
     );
 
 Map<String, dynamic> _$ModifierGroupPatchDTOToJson(
-        ModifierGroupPatchDTO instance) =>
-    <String, dynamic>{
-      if (instance.name case final value?) 'name': value,
-      if (instance.isRequired case final value?) 'is_required': value,
-      if (instance.isMultiselect case final value?) 'is_multiselect': value,
-    };
+    ModifierGroupPatchDTO instance) {
+  final val = <String, dynamic>{};
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('name', instance.name);
+  writeNotNull('is_required', instance.isRequired);
+  writeNotNull('is_multiselect', instance.isMultiselect);
+  return val;
+}

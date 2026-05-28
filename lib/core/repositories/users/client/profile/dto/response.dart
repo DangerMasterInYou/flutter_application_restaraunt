@@ -9,8 +9,8 @@ class ProfileResponse {
     required this.id,
     required this.email,
     required this.birthday,
-    required this.username,
-    required this.familyName,
+    required this.firstName,
+    required this.lastName,
     required this.phone,
     required this.isActive,
     required this.createdAt,
@@ -23,19 +23,19 @@ class ProfileResponse {
   @HiveField(1)
   @JsonKey(name: 'email')
   final String email;
-  
+
   @HiveField(2)
   @JsonKey(name: 'birthday')
   final DateTime? birthday;
 
   @HiveField(3)
-  @JsonKey(name: 'username')
-  final String? username;
+  @JsonKey(name: 'first_name')
+  final String? firstName;
 
   @HiveField(4)
-  @JsonKey(name: 'family_name')
-  final String? familyName;
-  
+  @JsonKey(name: 'last_name')
+  final String? lastName;
+
   @HiveField(5)
   @JsonKey(name: 'phone')
   final String? phone;
@@ -48,6 +48,7 @@ class ProfileResponse {
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
 
-  factory ProfileResponse.fromJson(Map<String, dynamic> json) => _$ProfileResponseFromJson(json);
+  factory ProfileResponse.fromJson(Map<String, dynamic> json) =>
+      _$ProfileResponseFromJson(json);
   Map<String, dynamic> toJson() => _$ProfileResponseToJson(this);
 }

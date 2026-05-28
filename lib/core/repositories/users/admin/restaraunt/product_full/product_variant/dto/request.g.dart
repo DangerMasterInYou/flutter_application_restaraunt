@@ -51,15 +51,23 @@ ProductVariantPatchDTO _$ProductVariantPatchDTOFromJson(
     );
 
 Map<String, dynamic> _$ProductVariantPatchDTOToJson(
-        ProductVariantPatchDTO instance) =>
-    <String, dynamic>{
-      if (instance.name case final value?) 'name': value,
-      if (instance.price case final value?) 'price': value,
-      if (instance.imageUrl case final value?) 'image_url': value,
-      if (instance.value case final value?) 'value': value,
-      if (instance.unit case final value?) 'unit': value,
-      if (instance.sku case final value?) 'sku': value,
-      if (instance.isAvailable case final value?) 'is_available': value,
-      if (instance.isCombo case final value?) 'is_combo': value,
-      if (instance.productId case final value?) 'product_id': value,
-    };
+    ProductVariantPatchDTO instance) {
+  final val = <String, dynamic>{};
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('name', instance.name);
+  writeNotNull('price', instance.price);
+  writeNotNull('image_url', instance.imageUrl);
+  writeNotNull('value', instance.value);
+  writeNotNull('unit', instance.unit);
+  writeNotNull('sku', instance.sku);
+  writeNotNull('is_available', instance.isAvailable);
+  writeNotNull('is_combo', instance.isCombo);
+  writeNotNull('product_id', instance.productId);
+  return val;
+}

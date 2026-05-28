@@ -82,7 +82,8 @@ class ProfileRepository implements AbstractProfileRepository {
       throw Exception('Не удалось обновить профиль: $e');
     }
   }
-   @override
+
+  @override
   Future<void> deleteProfile() async {
     try {
       final response = await dio.delete(
@@ -93,7 +94,8 @@ class ProfileRepository implements AbstractProfileRepository {
           sendTimeout: const Duration(seconds: 5),
         ),
       );
-      if (response.statusCode != 204) { // Успешное удаление часто возвращает 204 No Content
+      if (response.statusCode != 204 || response.statusCode != 200) {
+        // Успешное удаление часто возвращает 204 No Content
         throw DioException(
           requestOptions: response.requestOptions,
           response: response,

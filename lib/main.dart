@@ -19,13 +19,6 @@ import 'package:talker_bloc_logger/talker_bloc_logger.dart';
 
 import 'core/core.dart';
 import 'app.dart';
-import 'features/users/admin/view/admin_panel_screen.dart';
-import 'core/repositories/users/admin/restaraunt/product_full/category/repository/category.dart';
-import 'core/repositories/users/admin/restaraunt/product_full/product/repository/products.dart';
-import 'core/repositories/users/admin/restaraunt/product_full/product_variant/repository/product_variant.dart';
-import 'core/repositories/users/admin/restaraunt/product_full/modifier_full/modifier/repository/modifier.dart';
-import 'core/repositories/users/admin/restaraunt/product_full/modifier_full/modifier_group/repository/modifier_group.dart';
-import 'core/repositories/users/admin/restaraunt/product_full/modifier_full/modifier_group_association/repository/modifier_group_association.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -107,12 +100,10 @@ void main() async {
       () => ProductVariantRepository(dio: dio, apiSiteUrl: apiSiteUrl),
     );
     GetIt.I.registerLazySingleton<ModifierRepository>(
-      () => ModifierRepository(
-          dio: dio, apiSiteUrl: apiSiteUrl),
+      () => ModifierRepository(dio: dio, apiSiteUrl: apiSiteUrl),
     );
     GetIt.I.registerLazySingleton<ModifierGroupRepository>(
-      () => ModifierGroupRepository(
-          dio: dio, apiSiteUrl: apiSiteUrl),
+      () => ModifierGroupRepository(dio: dio, apiSiteUrl: apiSiteUrl),
     );
     GetIt.I.registerLazySingleton<ModifierGroupAssociationRepository>(
       () =>
@@ -141,10 +132,9 @@ void main() async {
         apiSiteUrl: apiSiteUrl,
       ),
     );
-    
+
     GetIt.I.registerLazySingleton<AbstractCartRepository>(
-      () =>
-          CartRepository(dio: dio, apiSiteUrl: apiSiteUrl),
+      () => CartRepository(dio: dio, apiSiteUrl: apiSiteUrl),
     );
 
     // GetIt.I.registerSingleton<AbstractOrderRepository>(

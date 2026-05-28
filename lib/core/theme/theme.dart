@@ -96,7 +96,7 @@ final lightTheme = ThemeData.light().copyWith(
     ),
   ),
   iconTheme: const IconThemeData(color: Color(0xFF1A1A1A)),
-  cardTheme: CardTheme(
+  cardTheme: CardThemeData(
     elevation: 4,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(14),
@@ -204,7 +204,7 @@ final darkTheme = ThemeData(
       ),
     ),
     iconTheme: const IconThemeData(color: Color(0xFFE0E0E0)),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),

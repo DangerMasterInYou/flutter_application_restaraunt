@@ -24,8 +24,16 @@ ModifierPatchDTO _$ModifierPatchDTOFromJson(Map<String, dynamic> json) =>
       priceDelta: (json['price_delta'] as num?)?.toInt(),
     );
 
-Map<String, dynamic> _$ModifierPatchDTOToJson(ModifierPatchDTO instance) =>
-    <String, dynamic>{
-      if (instance.name case final value?) 'name': value,
-      if (instance.priceDelta case final value?) 'price_delta': value,
-    };
+Map<String, dynamic> _$ModifierPatchDTOToJson(ModifierPatchDTO instance) {
+  final val = <String, dynamic>{};
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('name', instance.name);
+  writeNotNull('price_delta', instance.priceDelta);
+  return val;
+}

@@ -6,7 +6,7 @@ import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
-import '../../../../../../core/repositories/restaraunt/menu/menu.dart'; // Assuming this is the correct path for AbstractMenuRepository
+import '/core/repositories/restaraunt/menu/menu.dart';
 import '/core/repositories/users/client/restaraunt/carts/carts.dart';
 import '/core/hive/models/menu/menu.dart'; // For Menu model
 // import '/core/hive/models/cart_item/cart_item.dart'; // For CartItem model if used in AddItemCartMenu event

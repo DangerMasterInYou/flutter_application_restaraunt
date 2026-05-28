@@ -22,7 +22,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final ProfileBloc _profileBloc = ProfileBloc(GetIt.I<AbstractProfileRepository>());
+  final ProfileBloc _profileBloc =
+      ProfileBloc(GetIt.I<AbstractProfileRepository>());
 
   @override
   void initState() {
@@ -42,9 +43,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return completer.future;
   }
 
-  // ИСПРАВЛЕНО: Метод теперь принимает необязательный параметр force
   Future<void> _logout(BuildContext context, {bool force = false}) async {
-    bool? confirmed = force; // Если выход принудительный, подтверждение не требуется
+    bool? confirmed = force;
 
     if (!force) {
       confirmed = await showDialog<bool>(
@@ -52,14 +52,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         builder: (BuildContext dialogContext) {
           return AlertDialog(
             title: const Text('Выход из аккаунта'),
-            content: const Text('Вы уверены, что хотите выйти?', style: TextStyle(color: Colors.black)),
+            content: const Text('Вы уверены, что хотите выйти?',
+                style: TextStyle(color: Colors.black)),
             actions: <Widget>[
               TextButton(
-                child: const Text('Отмена', style: TextStyle(color: Colors.black)),
+                child:
+                    const Text('Отмена', style: TextStyle(color: Colors.black)),
                 onPressed: () => Navigator.of(dialogContext).pop(false),
               ),
               TextButton(
-                child: const Text('Выйти', style: TextStyle(color: Colors.black)),
+                child:
+                    const Text('Выйти', style: TextStyle(color: Colors.black)),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
               ),
             ],
@@ -69,12 +72,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     if (confirmed == true) {
-      // Очищаем данные сессии
       await GetIt.I<AbstractJWTTokensRepository>().clearTokens();
 
-      // Перенаправляем на экран входа, очищая историю навигации
       if (mounted) {
-        // Используем LoginRoute, как в вашем коде
         context.router.replaceAll([const LoginRoute()]);
       }
     }
@@ -83,9 +83,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Устанавливаем фон для всего экрана
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        // Стилизация AppBar под темную тему
         backgroundColor: Colors.black,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -95,7 +94,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: const Icon(Icons.menu),
           tooltip: 'Меню',
           onPressed: () {
-            // Используем MenuRoute, как в вашем коде
             context.router.push(const MenuRoute());
           },
         ),
@@ -112,12 +110,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: BlocProvider.value(
         value: _profileBloc,
-        // ИСПРАВЛЕНО: Синтаксис BlocListener
         child: BlocListener<ProfileBloc, ProfileState>(
           listener: (context, state) {
             // Успешное обновление
             if (state is ProfileLoaded &&
-                context.read<ProfileBloc>().state is ProfileLoading) {
+                _profileBloc.state is ProfileLoading) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Профиль успешно обновлен!'),
@@ -129,7 +126,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             else if (state is ProfileUpdateFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Ошибка обновления профиля: ${state.exception}'),
+                  content:
+                      Text('Ошибка обновления профиля: ${state.exception}'),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -143,7 +141,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   backgroundColor: Colors.green,
                 ),
               );
-              // Принудительный выход без диалога подтверждения
               _logout(context, force: true);
             }
             // Ошибка удаления
@@ -159,8 +156,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
           child: BlocBuilder<ProfileBloc, ProfileState>(
             builder: (context, state) {
-              // ИСПРАВЛЕНО: Добавлена проверка на ProfileDeleteInProgress
-              if (state is ProfileInitial || state is ProfileLoading || state is ProfileDeleteInProgress) {
+              if (state is ProfileInitial ||
+                  state is ProfileLoading ||
+                  state is ProfileDeleteInProgress) {
                 return const Center(child: CircularProgressIndicator());
               }
 
@@ -169,7 +167,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onRefresh: _onRefresh,
                   color: Colors.white,
                   backgroundColor: Colors.grey[900],
-                  child: ProfileContent(profile: state.profile),
+                  child: ProfileContent(
+                    profile: state.profile,
+                    profileBloc: _profileBloc,
+                  ),
                 );
               }
 
@@ -188,13 +189,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 20),
                         const Text(
                           'Не удалось загрузить профиль',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Пожалуйста, проверьте ваше интернет-соединение и попробуйте снова.',
-                          style: TextStyle(fontSize: 16, color: Colors.grey[400]),
+                          style:
+                              TextStyle(fontSize: 16, color: Colors.grey[400]),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 30),
@@ -213,16 +218,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
               }
 
-              if (state is ProfileUpdateFailure || state is ProfileDeleteFailure) {
+              if (state is ProfileUpdateFailure ||
+                  state is ProfileDeleteFailure) {
                 final profile = (state is ProfileUpdateFailure)
-                  ? state.lastProfile
-                  : (state as ProfileDeleteFailure).lastProfile;
+                    ? state.lastProfile
+                    : (state as ProfileDeleteFailure).lastProfile;
                 return RefreshIndicator(
                   onRefresh: _onRefresh,
-                  child: ProfileContent(profile: profile),
+                  child: Builder(
+                    builder: (context) => ProfileContent(
+                      profile: profile,
+                      profileBloc: _profileBloc,
+                    ),
+                  ),
                 );
               }
-              
+
               return const SizedBox.shrink();
             },
           ),

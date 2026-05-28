@@ -33,11 +33,19 @@ ProductPatchDTO _$ProductPatchDTOFromJson(Map<String, dynamic> json) =>
       sortOrder: (json['sort_order'] as num?)?.toInt(),
     );
 
-Map<String, dynamic> _$ProductPatchDTOToJson(ProductPatchDTO instance) =>
-    <String, dynamic>{
-      if (instance.categoryId case final value?) 'category_id': value,
-      if (instance.name case final value?) 'name': value,
-      if (instance.description case final value?) 'description': value,
-      if (instance.imageUrl case final value?) 'image_url': value,
-      if (instance.sortOrder case final value?) 'sort_order': value,
-    };
+Map<String, dynamic> _$ProductPatchDTOToJson(ProductPatchDTO instance) {
+  final val = <String, dynamic>{};
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('category_id', instance.categoryId);
+  writeNotNull('name', instance.name);
+  writeNotNull('description', instance.description);
+  writeNotNull('image_url', instance.imageUrl);
+  writeNotNull('sort_order', instance.sortOrder);
+  return val;
+}

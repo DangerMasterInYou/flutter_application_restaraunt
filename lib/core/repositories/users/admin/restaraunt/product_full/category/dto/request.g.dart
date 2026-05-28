@@ -24,8 +24,16 @@ CategoryPatchDTO _$CategoryPatchDTOFromJson(Map<String, dynamic> json) =>
       sortOrder: (json['sort_order'] as num?)?.toInt(),
     );
 
-Map<String, dynamic> _$CategoryPatchDTOToJson(CategoryPatchDTO instance) =>
-    <String, dynamic>{
-      if (instance.name case final value?) 'name': value,
-      if (instance.sortOrder case final value?) 'sort_order': value,
-    };
+Map<String, dynamic> _$CategoryPatchDTOToJson(CategoryPatchDTO instance) {
+  final val = <String, dynamic>{};
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('name', instance.name);
+  writeNotNull('sort_order', instance.sortOrder);
+  return val;
+}

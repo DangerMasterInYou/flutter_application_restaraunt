@@ -13,8 +13,8 @@ ProfileResponse _$ProfileResponseFromJson(Map<String, dynamic> json) =>
       birthday: json['birthday'] == null
           ? null
           : DateTime.parse(json['birthday'] as String),
-      username: json['username'] as String?,
-      familyName: json['family_name'] as String?,
+      firstName: json['first_name'] as String?,
+      lastName: json['last_name'] as String?,
       phone: json['phone'] as String?,
       isActive: json['is_active'] as bool,
       createdAt: DateTime.parse(json['created_at'] as String),
@@ -25,8 +25,8 @@ Map<String, dynamic> _$ProfileResponseToJson(ProfileResponse instance) =>
       'id': instance.id,
       'email': instance.email,
       'birthday': instance.birthday?.toIso8601String(),
-      'username': instance.username,
-      'family_name': instance.familyName,
+      'first_name': instance.firstName,
+      'last_name': instance.lastName,
       'phone': instance.phone,
       'is_active': instance.isActive,
       'created_at': instance.createdAt.toIso8601String(),
