@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter_application_restaraunt/features/users/client/restaraunt/product/view/product_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
-import '/core/services/alert_dialog.dart';
 import '/core/hive/models/menu/menu.dart';
+import '/core/repositories/users/client/restaraunt/carts/carts.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/tile_card.dart';
 import '../bloc/menu_bloc.dart';
 import 'package:flutter_application_restaraunt/core/repositories/restaraunt/menu/repository/abstract_menu.dart';
+import '../models/menu_item.dart'; // UI-модель
 
 @RoutePage()
 class MenuScreen extends StatefulWidget {
@@ -25,7 +27,10 @@ class _MenuScreenState extends State<MenuScreen> {
   @override
   void initState() {
     super.initState();
-    _menuBloc = MenuBloc(GetIt.I<AbstractMenuRepository>())..add(LoadMenu());
+    _menuBloc = MenuBloc(
+      GetIt.I<AbstractMenuRepository>(),
+      GetIt.I<AbstractCartRepository>(),
+    )..add(LoadMenu());
   }
 
   @override
@@ -34,10 +39,114 @@ class _MenuScreenState extends State<MenuScreen> {
     super.dispose();
   }
 
-  List<Menu> _getFilteredMenu(List<Menu> menuList) {
-    return _selectedCategory == null
-        ? menuList
-        : menuList.where((m) => m.category == _selectedCategory).toList();
+  // ---------------------------------------------------------------------------
+  // Вспомогательный метод: оставляет только первую строку описания (до \n)
+  // ---------------------------------------------------------------------------
+  String? _cleanDescription(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    return raw.split('\n').first.trim();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Группировка оригинальных Menu в UI‑модели MenuItem
+  // ---------------------------------------------------------------------------
+  List<MenuItem> _groupMenuItems(List<Menu> menuList) {
+    // Регулярное выражение для отделения размера/объёма в конце названия
+    // Удаляет числа с единицами (гр, г, мл, л, кг, шт) или слова‑размеры
+    final sizeRegex = RegExp(
+      r'\s+(?:\d+(?:\.\d+)?\s*(?:гр|г|мл|л|кг|шт)|Стандарт|Большая|Средняя|Маленькая)\s*$',
+    );
+
+    final Map<String, List<Menu>> grouped = {};
+
+    for (final item in menuList) {
+      // Извлекаем базовое имя, убирая размер/объём в конце
+      final baseName = item.name.replaceFirst(sizeRegex, '').trim();
+      // Ключ группировки: базовое имя + imageUrl (чтобы различать блюда с одинаковым названием, но разной картинкой)
+      final key = '$baseName|${item.imageUrl ?? ''}';
+      grouped.putIfAbsent(key, () => []).add(item);
+    }
+
+    return grouped.values.map((items) {
+      // Если только один элемент – создаём MenuItem с одним вариантом
+      if (items.length == 1) {
+        final m = items.first;
+        return MenuItem(
+          name: m.name,
+          description: _cleanDescription(m.description), // <-- чистим описание
+          imageUrl: m.imageUrl,
+          category: m.category,
+          sku: m.sku,
+          isAvailable: m.isAvailable,
+          modifierGroups: m.modifierGroups,
+          variants: [
+            MenuItemVariant(
+              id: m.id,
+              name: m.value != null && m.unit != null
+                  ? '${m.value} ${m.unit}'
+                  : m.name,
+              price: m.price,
+              value: m.value,
+              unit: m.unit,
+              isDefault: true,
+            )
+          ],
+        );
+      }
+
+      // Несколько размеров → собираем варианты
+      final variants = <MenuItemVariant>[];
+
+      // Определяем базовое имя для всего блюда (из первого элемента, убрав размер)
+      final first = items.first;
+      final baseName = first.name.replaceFirst(sizeRegex, '').trim();
+
+      for (final m in items) {
+        // Имя варианта: либо «value unit» (если есть), либо то, что осталось после удаления базового имени
+        String variantName;
+        if (m.value != null && m.unit != null) {
+          variantName = '${m.value} ${m.unit}';
+        } else {
+          // Убираем базовое имя из полного названия, оставляя только часть с размером
+          variantName = m.name.replaceFirst(baseName, '').trim();
+          if (variantName.isEmpty) {
+            // Если всё же пусто (например, базовое имя совпало с полным), берём последнее слово
+            variantName = m.name.split(' ').last;
+          }
+        }
+
+        variants.add(
+          MenuItemVariant(
+            id: m.id,
+            name: variantName,
+            price: m.price,
+            value: m.value,
+            unit: m.unit,
+            isDefault: m.name.contains('Стандарт'),
+          ),
+        );
+      }
+
+      return MenuItem(
+        name: baseName,
+        description:
+            _cleanDescription(first.description), // <-- чистим описание
+        imageUrl: first.imageUrl,
+        category: first.category,
+        sku: first.sku,
+        isAvailable: first.isAvailable,
+        modifierGroups: first.modifierGroups,
+        variants: variants,
+      );
+    }).toList();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Фильтрация по категории (работаем с MenuItem)
+  // ---------------------------------------------------------------------------
+  List<MenuItem> _getFilteredItems(List<MenuItem> items) {
+    if (_selectedCategory == null) return items;
+    return items.where((item) => item.category == _selectedCategory).toList();
   }
 
   @override
@@ -79,13 +188,16 @@ class _MenuScreenState extends State<MenuScreen> {
             }
 
             if (state is MenuLoaded) {
-              final categories = state.menuList
-                  .map((m) => m.category)
-                  .toSet()
-                  .toList()
-                ..sort();
+              // 1. Группируем Menu → List<MenuItem>
+              final menuItems = _groupMenuItems(state.menuList);
 
-              final filteredMenu = _getFilteredMenu(state.menuList);
+              // 2. Категории из сгруппированных данных
+              final categories =
+                  menuItems.map((m) => m.category).toSet().toList()..sort();
+
+              // 3. Фильтрация
+              final filteredItems = _getFilteredItems(menuItems);
+
               final crossAxisCount = _calculateCrossAxisCount(screenWidth);
               final isNarrow = crossAxisCount == 1;
 
@@ -101,8 +213,9 @@ class _MenuScreenState extends State<MenuScreen> {
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     sliver: isNarrow
-                        ? _buildMenuList(filteredMenu, isNarrow: true)
-                        : _buildMenuGrid(filteredMenu, crossAxisCount, isNarrow: false),
+                        ? _buildMenuList(filteredItems, isNarrow: true)
+                        : _buildMenuGrid(filteredItems, crossAxisCount,
+                            isNarrow: false),
                   ),
                 ],
               );
@@ -115,28 +228,31 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
-  // Строит список для узких экранов
-  SliverList _buildMenuList(List<Menu> filteredMenu, {required bool isNarrow}) {
+  // ---------------------------------------------------------------------------
+  // Построение списка / сетки
+  // ---------------------------------------------------------------------------
+  SliverList _buildMenuList(List<MenuItem> items, {required bool isNarrow}) {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (context, index) {
-          final menu = filteredMenu[index];
+          final item = items[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: MenuTileCard(
-              data: menu,
+              data: item,
               isNarrow: isNarrow,
-              onAddToCart: () => _addToCart(context, menu),
+              onTap: () => _openProductScreen(item),
+              onAddToCart: (variant) => _quickAddToCart(item, variant),
             ),
           );
         },
-        childCount: filteredMenu.length,
+        childCount: items.length,
       ),
     );
   }
 
-  // Строит сетку для широких экранов
-  SliverGrid _buildMenuGrid(List<Menu> filteredMenu, int crossAxisCount, {required bool isNarrow}) {
+  SliverGrid _buildMenuGrid(List<MenuItem> items, int crossAxisCount,
+      {required bool isNarrow}) {
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
@@ -146,14 +262,15 @@ class _MenuScreenState extends State<MenuScreen> {
       ),
       delegate: SliverChildBuilderDelegate(
         (context, index) {
-          final menu = filteredMenu[index];
+          final item = items[index];
           return MenuTileCard(
-            data: menu,
+            data: item,
             isNarrow: isNarrow,
-            onAddToCart: () => _addToCart(context, menu),
+            onTap: () => _openProductScreen(item),
+            onAddToCart: (variant) => _quickAddToCart(item, variant),
           );
         },
-        childCount: filteredMenu.length,
+        childCount: items.length,
       ),
     );
   }
@@ -165,6 +282,9 @@ class _MenuScreenState extends State<MenuScreen> {
     return 1;
   }
 
+  // ---------------------------------------------------------------------------
+  // AppBar и кнопки категорий (без изменений)
+  // ---------------------------------------------------------------------------
   SliverAppBar _buildAppBar(bool isWideScreen, ThemeData theme) {
     return SliverAppBar(
       leading: isWideScreen
@@ -179,7 +299,9 @@ class _MenuScreenState extends State<MenuScreen> {
                 child: _buildLogo(40),
               ),
             ),
-      title: isWideScreen ? (buildWideAppBar(context) as AppBar).title : Text('Меню', style: theme.textTheme.titleMedium),
+      title: isWideScreen
+          ? (buildWideAppBar(context) as AppBar).title
+          : Text('Меню', style: theme.textTheme.titleMedium),
       actions: isWideScreen
           ? (buildWideAppBar(context) as AppBar).actions
           : (buildNarrowAppBar(context) as AppBar).actions,
@@ -212,7 +334,6 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   Widget _buildCategoryButtons(List<String> categories, ThemeData theme) {
-    // Оборачиваем Row в SingleChildScrollView для горизонтальной прокрутки
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -253,19 +374,37 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
-  void _addToCart(BuildContext context, Menu menu) {
-    // Реализация добавления в корзину
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Добавлено'),
-        content: Text('${menu.name} добавлен в корзину', style: TextStyle(color: Colors.black),),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(color: Colors.black),),
-          ),
-        ],
+  // ---------------------------------------------------------------------------
+  // Навигация и добавление в корзину
+  // ---------------------------------------------------------------------------
+  void _openProductScreen(MenuItem item) {
+    final productId = item.variants.first.id;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductScreen(id: productId),
+      ),
+    );
+  }
+
+  void _quickAddToCart(MenuItem item, MenuItemVariant variant) {
+    if (item.modifierGroups.isNotEmpty) {
+      _openProductScreen(item);
+      return;
+    }
+
+    _menuBloc.add(
+      AddItemCartMenu(
+        cartItemRequest: CartItemRequestDTO(
+          productVariantId: variant.id,
+          quantity: 1,
+        ),
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${item.name} (${variant.name}) добавлен в корзину'),
       ),
     );
   }

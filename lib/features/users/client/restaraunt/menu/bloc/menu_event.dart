@@ -13,13 +13,13 @@ class LoadMenu extends MenuEvent {
   List<Object?> get props => [completer];
 }
 
-// class AddItemCartMenu extends MenuEvent {
-//   AddItemCartMenu({
-//     required this.cartItem,
-//   });
+class AddItemCartMenu extends MenuEvent {
+  AddItemCartMenu({
+    required this.cartItemRequest,
+  });
 
-//   final Cart cartItem;
+  final CartItemRequestDTO cartItemRequest;
 
-//   @override
-//   List<Object?> get props => [cartItem];
-// }
+  @override
+  List<Object?> get props => [cartItemRequest];
+}

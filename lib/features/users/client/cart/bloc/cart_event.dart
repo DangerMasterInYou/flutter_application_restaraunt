@@ -1,4 +1,3 @@
-// lib/features/cart/presentation/bloc/cart_event.dart
 part of 'cart_bloc.dart';
 
 abstract class CartEvent extends Equatable {
@@ -21,7 +20,10 @@ class AddItemToCart extends CartEvent {
 class UpdateItemQuantity extends CartEvent {
   final int cartItemId;
   final int newQuantity;
-  const UpdateItemQuantity({required this.cartItemId, required this.newQuantity});
+  const UpdateItemQuantity({
+    required this.cartItemId,
+    required this.newQuantity,
+  });
   @override
   List<Object> get props => [cartItemId, newQuantity];
 }
@@ -31,4 +33,28 @@ class RemoveItemFromCart extends CartEvent {
   const RemoveItemFromCart(this.cartItemId);
   @override
   List<Object> get props => [cartItemId];
+}
+
+class SetCheckoutDetails extends CartEvent {
+  final String customerName;
+  final String customerPhone;
+  final String? comment;
+
+  const SetCheckoutDetails({
+    required this.customerName,
+    required this.customerPhone,
+    this.comment,
+  });
+
+  @override
+  List<Object?> get props => [customerName, customerPhone, comment];
+}
+
+class PlaceOrder extends CartEvent {
+  final String paymentMethod;
+
+  const PlaceOrder({required this.paymentMethod});
+
+  @override
+  List<Object> get props => [paymentMethod];
 }

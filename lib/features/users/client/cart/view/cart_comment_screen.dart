@@ -30,9 +30,14 @@ class _CartCommentScreenState extends State<CartCommentScreen> {
   }
 
   void _continue() {
-    // Проверяем, валидна ли форма (заполнены ли обязательные поля)
     if (_formKey.currentState?.validate() ?? false) {
-      // Если все корректно, переходим на следующий шаг
+      context.read<CartBloc>().add(
+            SetCheckoutDetails(
+              customerName: _nameController.text.trim(),
+              customerPhone: _phoneController.text.trim(),
+              comment: _commentController.text.trim(),
+            ),
+          );
       AutoTabsRouter.of(context).setActiveIndex(2);
     }
   }

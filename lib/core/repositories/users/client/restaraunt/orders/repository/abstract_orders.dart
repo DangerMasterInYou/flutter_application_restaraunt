@@ -1,10 +1,14 @@
-// import '../orders.dart';
+import '../dto/dto.dart';
 
-// abstract class AbstractOrderRepository {
-//   Future<List<Order>> getOrderList();
-//   Future<Order> getOrder(int orderId);
-//   Future<Order> createOrder(Order order);
-//   Stream<List<Order>> getOrderStream();
-//   void closeOrderStream();
-//   void initiateWebSocketConnection();
-// }
+abstract class AbstractOrdersRepository {
+  Future<List<OrderResponseDTO>> getOrdersList();
+
+  Future<OrderResponseDTO> getOrder(int orderId);
+
+  Future<OrderResponseDTO> createOrder(OrderCreateRequestDTO request);
+
+  Future<OrderResponseDTO> updateOrderStatus(
+    int orderId,
+    OrderStatusUpdateRequestDTO request,
+  );
+}

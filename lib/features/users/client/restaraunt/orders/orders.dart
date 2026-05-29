@@ -1,2 +1,1 @@
-export 'bloc/orders_bloc.dart';
-export 'view/view.dart';
+export '/core/repositories/users/client/restaraunt/orders/orders.dart';

@@ -1,31 +1,82 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import '/core/hive/models/menu/menu.dart';
+import '/core/repositories/users/client/restaraunt/carts/carts.dart';
 import '../bloc/product_bloc.dart';
-import '/core/router/router.dart'; // Убедитесь, что импортировали ваш роутер для навигации
+import '../../menu/models/menu_item.dart'; // MenuItem
 
 @RoutePage()
-class ProductScreen extends StatelessWidget {
-  final int id;
+class ProductScreen extends StatefulWidget {
+  final int
+      id; // пока используем id первого варианта, чтобы загрузить продукт с сервера
   const ProductScreen({super.key, required this.id});
 
   @override
+  State<ProductScreen> createState() => _ProductScreenState();
+}
+
+class _ProductScreenState extends State<ProductScreen> {
+  late ProductBloc _bloc;
+
+  // Выбранный вариант (по умолчанию первый)
+  MenuItemVariant? _selectedVariant;
+  // Модификаторы: Map<groupId, List<modifierId>>
+  final Map<int, List<int>> _selectedModifiers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _bloc = ProductBloc()..add(LoadProduct(productId: widget.id));
+  }
+
+  @override
+  void dispose() {
+    _bloc.close();
+    super.dispose();
+  }
+
+  // Общая цена с учётом модификаторов и выбранного варианта
+  int _calculateTotalPrice(Menu product) {
+    int price = _selectedVariant?.price ?? product.price;
+    for (final entry in _selectedModifiers.entries) {
+      final group = product.modifierGroups.firstWhere((g) => g.id == entry.key);
+      for (final modId in entry.value) {
+        final modifier = group.modifiers.firstWhere((m) => m.id == modId);
+        price += modifier.priceDelta;
+      }
+    }
+    return price;
+  }
+
+  bool _isGroupValid(ModifierGroup group) {
+    final selected = _selectedModifiers[group.id] ?? [];
+    if (group.isRequired && selected.isEmpty) return false;
+    return true;
+  }
+
+  bool _canAddToCart(Menu product) {
+    for (final group in product.modifierGroups) {
+      if (!_isGroupValid(group)) return false;
+    }
+    return true;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Обертываем в BlocProvider для управления состоянием этой страницы
-    return BlocProvider(
-      create: (_) => ProductBloc()..add(LoadProduct(productId: id)),
+    return BlocProvider.value(
+      value: _bloc,
       child: BlocBuilder<ProductBloc, ProductState>(
         builder: (context, state) {
-          // Показываем индикатор загрузки, пока данные о продукте загружаются
           if (state is ProductLoading) {
             return const Scaffold(
               backgroundColor: Color(0xFF1A191A),
-              body: Center(child: CircularProgressIndicator(color: Colors.white)),
+              body:
+                  Center(child: CircularProgressIndicator(color: Colors.white)),
             );
           }
-          // Показываем сообщение об ошибке, если загрузка не удалась
-          else if (state is ProductLoadingFailure) {
+          if (state is ProductLoadingFailure) {
             return Scaffold(
               backgroundColor: const Color(0xFF1A191A),
               appBar: AppBar(
@@ -33,197 +84,212 @@ class ProductScreen extends StatelessWidget {
                 elevation: 0,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => context.router.pop(), // Возвращаемся назад
+                  onPressed: () => context.router.pop(),
                 ),
               ),
               body: const Center(
-                child: Text('Ошибка загрузки продукта', style: TextStyle(color: Colors.white70)),
+                child: Text('Ошибка загрузки продукта',
+                    style: TextStyle(color: Colors.white70)),
               ),
             );
           }
-          // Отображаем страницу, когда продукт успешно загружен
-          else if (state is ProductLoaded) {
-            final Menu product = state.product;
+          if (state is ProductLoaded) {
+            final product = state.product;
+            // Инициализация варианта (если ещё не выбран)
+            if (_selectedVariant == null) {
+              // Поскольку в product нет variants, создаём один дефолтный вариант
+              _selectedVariant = MenuItemVariant(
+                id: product.id,
+                name: product.value != null && product.unit != null
+                    ? '${product.value} ${product.unit}'
+                    : product.name,
+                price: product.price,
+                value: product.value,
+                unit: product.unit,
+                isDefault: true,
+              );
+            }
+
+            final total = _calculateTotalPrice(product);
             final theme = Theme.of(context);
-            final isWide = MediaQuery.of(context).size.width > 600;
 
             return Scaffold(
-              backgroundColor: const Color(0xFF1A191A), // Устанавливаем тёмный фон
+              backgroundColor: const Color(0xFF1A191A),
               appBar: AppBar(
-                backgroundColor: Colors.transparent, // Прозрачный AppBar для слияния с фоном
+                backgroundColor: Colors.transparent,
                 elevation: 0,
-                // Кнопка "назад", которая ведет на MenuScreen
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
                   onPressed: () => context.router.pop(),
                 ),
-                // Название продукта по центру
                 title: Text(
                   product.name,
-                  style: theme.textTheme.titleLarge?.copyWith(color: Colors.white),
+                  style:
+                      theme.textTheme.titleLarge?.copyWith(color: Colors.white),
                   overflow: TextOverflow.ellipsis,
                 ),
                 centerTitle: true,
               ),
-              body: SingleChildScrollView( // Позволяет прокручивать контент
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 700),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch, // Растягиваем дочерние элементы
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (product.imageUrl != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.network(
+                          product.fullImageUrl,
+                          height: 220,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            height: 220,
+                            color: Colors.grey[850],
+                            child: const Icon(Icons.no_photography,
+                                color: Colors.white24, size: 60),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    // Модификаторы
+                    ...product.modifierGroups
+                        .map((group) => _buildModifierGroup(group, theme)),
+                    const SizedBox(height: 24),
+                    // Итого и кнопка
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // --- Изображение продукта ---
-                        if (product.imageUrl != null && product.imageUrl!.isNotEmpty)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.network(
-                              product.fullImageUrl,
-                              height: isWide ? 300 : 220,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Container(
-                                height: isWide ? 300 : 220,
-                                color: Colors.grey[850],
-                                child: const Icon(Icons.no_photography, color: Colors.white24, size: 60),
-                              ),
-                            ),
+                        Text(
+                          'Итого: $total ₽',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
                           ),
-                        const SizedBox(height: 16),
-
-                        // --- Контейнер-форма для деталей ---
-                        Container(
-                          padding: const EdgeInsets.all(20.0),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF242526), // Фон формы, чуть светлее основного
-                            borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        ElevatedButton(
+                          onPressed: _canAddToCart(product)
+                              ? () => _addToCart(product)
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // --- Большой заголовок (название) ---
-                              Text(
-                                product.name,
-                                style: theme.textTheme.headlineMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-
-                              // --- Описание продукта ---
-                              if (product.description != null && product.description!.isNotEmpty)
-                                Text(
-                                  product.description!,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: Colors.white70,
-                                    height: 1.5,
-                                    fontSize: 20
-                                  ),
-                                ),
-                              const SizedBox(height: 16),
-
-                              // --- Детали продукта (поля поменьше) ---
-                              _buildDetailRow(context, label: 'Категория', value: product.category),
-                              _buildDetailRow(context, label: 'Артикул (SKU)', value: product.sku ?? 'Не указан'),
-                              if (product.value != null && product.unit != null)
-                                _buildDetailRow(context, label: 'Объем/Вес', value: '${product.value} ${product.unit}'),
-                              
-                              const Divider(color: Colors.white24, height: 32),
-
-                              // --- Цена ---
-                              _buildDetailRow(context, label: 'Цена', value: '${product.price} ₽', isPrice: true),
-                              
-                              const SizedBox(height: 32),
-
-                              // --- Кнопка добавления в корзину ---
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: product.isAvailable ? theme.primaryColor : Colors.grey[800],
-                                    foregroundColor: product.isAvailable ? Colors.black : Colors.white38,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                  onPressed: product.isAvailable ? () => {_addToCart(context, product)} : null,
-                                  child: Text(product.isAvailable ? 'Добавить в корзину' : 'Нет в наличии', style: theme.textTheme.titleMedium?.copyWith(color: Colors.black),),
-                                ),
-                              ),
-                            ],
-                          ),
+                          child: const Text('Добавить в корзину'),
                         ),
                       ],
                     ),
-                  ),
+                  ],
                 ),
               ),
             );
           }
-          // Возвращаем пустой контейнер по умолчанию
           return const SizedBox.shrink();
         },
       ),
     );
   }
 
-  // Вспомогательный виджет для отображения строки "поле: значение"
-  Widget _buildDetailRow(BuildContext context, {required String label, required String value, bool isPrice = false}) {
-    final theme = Theme.of(context);
-    
-    // Стиль для цены
-    final priceStyle = theme.textTheme.headlineSmall?.copyWith(
-      color: Colors.white, 
-      fontWeight: FontWeight.bold
-    );
-    // Стиль для значения обычного поля
-    final valueStyle = theme.textTheme.bodyLarge?.copyWith(
-      color: Colors.white,
-      fontWeight: FontWeight.w500
-    );
-
+  Widget _buildModifierGroup(ModifierGroup group, ThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Метка (название поля)
           Text(
-            label,
-            style: theme.textTheme.bodyLarge?.copyWith(color: Colors.white60),
+            group.name + (group.isRequired ? ' *' : ''),
+            style: theme.textTheme.titleMedium?.copyWith(color: Colors.white),
           ),
-          const SizedBox(width: 16),
-          // Значение поля (гибкое, чтобы переноситься при необходимости)
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: isPrice ? priceStyle : valueStyle,
-            ),
-          ),
+          const SizedBox(height: 8),
+          group.isMultiselect
+              ? Wrap(
+                  spacing: 8,
+                  children: group.modifiers.map((mod) {
+                    final selected =
+                        (_selectedModifiers[group.id] ?? []).contains(mod.id);
+                    return FilterChip(
+                      label: Text(
+                          '${mod.name} ${mod.priceDelta > 0 ? "+${mod.priceDelta}₽" : ""}'),
+                      selected: selected,
+                      onSelected: (isSel) {
+                        setState(() {
+                          _selectedModifiers[group.id] ??= [];
+                          if (isSel) {
+                            _selectedModifiers[group.id]!.add(mod.id);
+                          } else {
+                            _selectedModifiers[group.id]!.remove(mod.id);
+                          }
+                        });
+                      },
+                      selectedColor: Colors.white,
+                      backgroundColor: Colors.grey[800],
+                      labelStyle: TextStyle(
+                          color: selected ? Colors.black : Colors.white),
+                    );
+                  }).toList(),
+                )
+              : Wrap(
+                  spacing: 8,
+                  children: group.modifiers.map((mod) {
+                    final selected =
+                        (_selectedModifiers[group.id] ?? []).contains(mod.id);
+                    return ChoiceChip(
+                      label: Text(
+                          '${mod.name} ${mod.priceDelta > 0 ? "+${mod.priceDelta}₽" : ""}'),
+                      selected: selected,
+                      onSelected: (_) {
+                        setState(() {
+                          _selectedModifiers[group.id] = [mod.id];
+                        });
+                      },
+                      selectedColor: Colors.white,
+                      backgroundColor: Colors.grey[800],
+                      labelStyle: TextStyle(
+                          color: selected ? Colors.black : Colors.white),
+                    );
+                  }).toList(),
+                ),
         ],
       ),
     );
   }
 
-  void _addToCart(BuildContext context, Menu menu) {
-    // Реализация добавления в корзину
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Добавлено'),
-        content: Text('${menu.name} добавлен в корзину', style: TextStyle(color: Colors.black),),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(color: Colors.black),),
+  Future<void> _addToCart(Menu product) async {
+    final variantId = _selectedVariant!.id;
+    final modifiers = _selectedModifiers.values
+        .expand((list) => list)
+        .map(
+          (modifierId) => AppliedModifierCreateDTO(
+            modifierId: modifierId,
+            quantity: 1,
           ),
-        ],
-      ),
-    );
+        )
+        .toList();
+
+    try {
+      await GetIt.I<AbstractCartRepository>().addItemToCart(
+        CartItemRequestDTO(
+          productVariantId: variantId,
+          quantity: 1,
+          modifiers: modifiers,
+        ),
+      );
+
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Добавлено в корзину')),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось добавить товар в корзину')),
+      );
+    }
   }
 }

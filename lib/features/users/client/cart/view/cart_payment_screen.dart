@@ -17,6 +17,7 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
   // ИСПРАВЛЕНО: Таймер для отслеживания долгой загрузки
   Timer? _loadingTimer;
   bool _showRetryButton = false;
+  bool _wasPlacingOrder = false;
 
   @override
   void initState() {
@@ -56,7 +57,6 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<CartBloc, CartState>(
       listener: (context, state) {
-        // Когда данные успешно загружены, отменяем таймер
         if (state is CartLoaded) {
           _loadingTimer?.cancel();
           if (_showRetryButton) {
@@ -65,9 +65,37 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
             });
           }
         }
+        if (state is CartPlacingOrder) {
+          _wasPlacingOrder = true;
+        }
+        if (state is CartLoadingFailure && _wasPlacingOrder) {
+          _wasPlacingOrder = false;
+          context.read<CartBloc>().add(const LoadCart());
+        }
+        if (state is CartOrderPlaced) {
+          _wasPlacingOrder = false;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Заказ #${state.order.id} оформлен')),
+          );
+          context.router.popUntilRoot();
+          context.router.replace(const MenuRoute());
+        }
+        if (state is CartLoadingFailure && _wasPlacingOrder) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Ошибка: ${state.exception ?? 'не удалось оформить заказ'}',
+              ),
+            ),
+          );
+        }
       },
       builder: (context, state) {
         // Если идет загрузка или ошибка, но кнопка "Повторить" еще не показана
+        if (state is CartPlacingOrder) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
         if (state is! CartLoaded && !_showRetryButton) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -108,14 +136,15 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Здесь будет логика оформления заказа
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Заказ успешно оформлен!')),
-                    );
-                    context.router.popUntilRoot(); // Возвращаемся на самый первый экран
-                    context.router.replace(const MenuRoute()); // и заменяем его на Меню
-                  },
+                  onPressed: state is CartPlacingOrder
+                      ? null
+                      : () {
+                          context.read<CartBloc>().add(
+                                PlaceOrder(
+                                  paymentMethod: _selectedPaymentMethod,
+                                ),
+                              );
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,

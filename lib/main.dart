@@ -137,6 +137,10 @@ void main() async {
       () => CartRepository(dio: dio, apiSiteUrl: apiSiteUrl),
     );
 
+    GetIt.I.registerLazySingleton<AbstractOrdersRepository>(
+      () => OrdersRepository(dio: dio, apiSiteUrl: apiSiteUrl),
+    );
+
     // GetIt.I.registerSingleton<AbstractOrderRepository>(
     //   OrderRepository(
     //     dio: dio,

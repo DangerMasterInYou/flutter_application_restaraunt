@@ -1,6 +1,5 @@
 // lib/features/cart/presentation/widgets/cart_tile_card.dart
 import 'package:flutter/material.dart';
-import '/core/router/router.dart';
 import '/core/repositories/users/client/restaraunt/carts/carts.dart';
 
 class CartTileCard extends StatelessWidget {
@@ -88,7 +87,9 @@ class CartTileCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              product.name,
+                              product.sizeLabel != null
+                                  ? '${product.name} (${product.sizeLabel})'
+                                  : product.name,
                               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: isSmallScreen ? 16 : 18),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -110,7 +111,9 @@ class CartTileCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: cartItem.appliedModifiers
                                 .map((mod) => Text(
-                                      '${mod.modifier.name}', // Убрал 'шт', так как для соусов это может быть лишним
+                                      mod.quantity > 1
+                                          ? '${mod.modifier.name} ×${mod.quantity}'
+                                          : mod.modifier.name,
                                       style: TextStyle(color: Colors.grey[400], fontSize: 12),
                                     ))
                                 .toList(),

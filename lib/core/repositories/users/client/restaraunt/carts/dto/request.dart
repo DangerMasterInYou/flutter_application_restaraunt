@@ -4,6 +4,24 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'request.g.dart';
 
+@JsonSerializable()
+class AppliedModifierCreateDTO {
+  @JsonKey(name: 'modifier_id')
+  final int modifierId;
+
+  @JsonKey(name: 'quantity')
+  final int quantity;
+
+  const AppliedModifierCreateDTO({
+    required this.modifierId,
+    this.quantity = 1,
+  });
+
+  factory AppliedModifierCreateDTO.fromJson(Map<String, dynamic> json) =>
+      _$AppliedModifierCreateDTOFromJson(json);
+  Map<String, dynamic> toJson() => _$AppliedModifierCreateDTOToJson(this);
+}
+
 // Для эндпоинта POST /cart/items
 @JsonSerializable()
 class CartItemRequestDTO {
@@ -13,13 +31,13 @@ class CartItemRequestDTO {
   @JsonKey(name: 'quantity')
   final int quantity;
 
-  @JsonKey(name: 'modifier_ids')
-  final List<int> modifierIds;
+  @JsonKey(name: 'modifiers')
+  final List<AppliedModifierCreateDTO> modifiers;
 
   CartItemRequestDTO({
     required this.productVariantId,
     required this.quantity,
-    this.modifierIds = const [],
+    this.modifiers = const [],
   });
 
   factory CartItemRequestDTO.fromJson(Map<String, dynamic> json) =>

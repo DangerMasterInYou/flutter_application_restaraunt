@@ -1,7 +1,6 @@
-// lib/features/cart/data/dto/response.dart
-
+import 'package:flutter_application_restaraunt/api_config.dart';
 import 'package:json_annotation/json_annotation.dart';
-import '/core/hive/models/menu/menu.dart'; // <-- Укажите правильный путь к вашей модели Menu
+import '/core/hive/models/menu/menu.dart';
 
 part 'response.g.dart';
 
@@ -25,6 +24,60 @@ class CartResponseDTO {
 }
 
 @JsonSerializable()
+class CartProductVariantDTO {
+  final int id;
+
+  @JsonKey(name: 'product_id')
+  final int productId;
+
+  final String name;
+  final String? description;
+
+  @JsonKey(name: 'image_url')
+  final String? imageUrl;
+
+  final int price;
+  final String sku;
+  final double? value;
+  final String? unit;
+
+  @JsonKey(name: 'is_available')
+  final bool isAvailable;
+
+  @JsonKey(name: 'is_deleted')
+  final bool isDeleted;
+
+  @JsonKey(name: 'is_combo')
+  final bool isCombo;
+
+  CartProductVariantDTO({
+    required this.id,
+    required this.productId,
+    required this.name,
+    this.description,
+    this.imageUrl,
+    required this.price,
+    required this.sku,
+    this.value,
+    this.unit,
+    required this.isAvailable,
+    required this.isDeleted,
+    required this.isCombo,
+  });
+
+  String get fullImageUrl =>
+      imageUrl != null ? '${ApiConfig.apiSiteUrl}$imageUrl' : '';
+
+  String? get sizeLabel =>
+      value != null && unit != null ? '$value $unit' : null;
+
+  factory CartProductVariantDTO.fromJson(Map<String, dynamic> json) =>
+      _$CartProductVariantDTOFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CartProductVariantDTOToJson(this);
+}
+
+@JsonSerializable()
 class CartItemResponseDTO {
   @JsonKey(name: 'id')
   final int id;
@@ -32,9 +85,8 @@ class CartItemResponseDTO {
   @JsonKey(name: 'quantity')
   final int quantity;
 
-  // product_variant теперь соответствует вашей модели Menu
   @JsonKey(name: 'product_variant')
-  final Menu productVariant;
+  final CartProductVariantDTO productVariant;
 
   @JsonKey(name: 'applied_modifiers')
   final List<AppliedModifierResponseDTO> appliedModifiers;
@@ -61,7 +113,6 @@ class AppliedModifierResponseDTO {
   @JsonKey(name: 'quantity')
   final int quantity;
 
-  // modifier теперь соответствует вашей модели Modifier
   @JsonKey(name: 'modifier')
   final Modifier modifier;
 

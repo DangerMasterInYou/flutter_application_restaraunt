@@ -34,7 +34,7 @@ class MenuRepository implements AbstractMenuRepository {
   Future<List<Menu>> _fetchMenuListFromApi() async {
     try {
       final response = await dio.get(
-        '$apiSiteUrl/products',
+        '$apiSiteUrl/menu/products',
         options: Options(
           receiveTimeout: const Duration(seconds: 5),
           sendTimeout: const Duration(seconds: 5),
@@ -101,7 +101,7 @@ class MenuRepository implements AbstractMenuRepository {
   Future<Menu> _fetchMenuFromApi(int menuId) async {
     try {
       final response = await dio.get(
-        '$apiSiteUrl/menu/$menuId',
+        '$apiSiteUrl/menu/product/$menuId',
         options: Options(
           receiveTimeout: const Duration(seconds: 5),
           sendTimeout: const Duration(seconds: 5),

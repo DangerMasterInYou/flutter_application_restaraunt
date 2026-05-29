@@ -20,12 +20,46 @@ Map<String, dynamic> _$CartResponseDTOToJson(CartResponseDTO instance) =>
       'total_price': instance.totalPrice,
     };
 
+CartProductVariantDTO _$CartProductVariantDTOFromJson(
+        Map<String, dynamic> json) =>
+    CartProductVariantDTO(
+      id: (json['id'] as num).toInt(),
+      productId: (json['product_id'] as num).toInt(),
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      imageUrl: json['image_url'] as String?,
+      price: (json['price'] as num).toInt(),
+      sku: json['sku'] as String,
+      value: (json['value'] as num?)?.toDouble(),
+      unit: json['unit'] as String?,
+      isAvailable: json['is_available'] as bool,
+      isDeleted: json['is_deleted'] as bool,
+      isCombo: json['is_combo'] as bool,
+    );
+
+Map<String, dynamic> _$CartProductVariantDTOToJson(
+        CartProductVariantDTO instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'product_id': instance.productId,
+      'name': instance.name,
+      'description': instance.description,
+      'image_url': instance.imageUrl,
+      'price': instance.price,
+      'sku': instance.sku,
+      'value': instance.value,
+      'unit': instance.unit,
+      'is_available': instance.isAvailable,
+      'is_deleted': instance.isDeleted,
+      'is_combo': instance.isCombo,
+    };
+
 CartItemResponseDTO _$CartItemResponseDTOFromJson(Map<String, dynamic> json) =>
     CartItemResponseDTO(
       id: (json['id'] as num).toInt(),
       quantity: (json['quantity'] as num).toInt(),
-      productVariant:
-          Menu.fromJson(json['product_variant'] as Map<String, dynamic>),
+      productVariant: CartProductVariantDTO.fromJson(
+          json['product_variant'] as Map<String, dynamic>),
       appliedModifiers: (json['applied_modifiers'] as List<dynamic>)
           .map((e) =>
               AppliedModifierResponseDTO.fromJson(e as Map<String, dynamic>))
