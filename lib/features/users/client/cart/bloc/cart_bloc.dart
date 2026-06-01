@@ -153,9 +153,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       emit(CartOrderPlaced(order: order));
-      emit(CartLoaded(
-        cartResponse: CartResponseDTO(items: const [], totalPrice: 0),
-      ));
     } catch (e, st) {
       _handleError(e, st, emit);
     }

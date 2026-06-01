@@ -2,8 +2,13 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_application_restaraunt/features/users/admin/bloc/admin_entities_bloc.dart';
+import '/core/repositories/users/admin/restaraunt/product_full/product_variant/dto/response.dart';
 import '/core/router/router.dart';
 import '../widgets/widgets.dart';
+
+// Импортируем ModifierResponse с алиасом, чтобы избежать конфликта с одноимённым классом из modifier_group/dto/response.dart
+import '/core/repositories/users/admin/restaraunt/product_full/modifier_full/modifier/dto/response.dart'
+    as modifier_dto;
 
 @RoutePage()
 class AdminPanelScreen extends StatefulWidget {
@@ -20,16 +25,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   void initState() {
     super.initState();
-    // Диспатчим загрузку всех сущностей при инициализации
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   context.read<AdminEntitiesBloc>().add(LoadAllEntities());
-    // });
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => AdminEntitiesBloc()..add(LoadAllEntities()), // MODIFIED HERE
+      create: (_) => AdminEntitiesBloc()..add(LoadAllEntities()),
       child: BlocConsumer<AdminEntitiesBloc, AdminEntitiesState>(
         listener: (context, state) {
           if (state is AdminEntityOperationError) {
@@ -53,10 +54,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(
-                    Icons.logout,
-                    color: Colors.black,
-                  ),
+                  icon: const Icon(Icons.logout, color: Colors.black),
                   tooltip: 'Выйти',
                   onPressed: () {
                     context.router.replace(const LoginRoute());
@@ -110,9 +108,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     'variant',
     'modifier',
     'modifierGroup',
-    'cart',
-    'orders',
-    'users',
   ];
 
   int _entityIndex(String? entity) =>
@@ -130,12 +125,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         return 'Модификаторы';
       case 'modifierGroup':
         return 'Группы модификаторов';
-      case 'cart':
-        return 'Корзины';
-      case 'orders':
-        return 'Заказы';
-      case 'users':
-        return 'Пользователи';
       default:
         return entity;
     }
@@ -167,7 +156,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             showDialog(
               context: context,
               builder: (ctx) => ProductCrudDialog(
-                // categories: categories,
                 onSubmit: (categoryId, name, description, sortOrder, imageUrl) {
                   context.read<AdminEntitiesBloc>().add(
                         CreateProduct(
@@ -210,7 +198,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                           productId: productId,
                           name: name,
                           price: price,
-                          imageUrl: imageUrl ?? '', // MODIFIED
+                          sku: sku,
+                          isAvailable: isAvailable,
+                          isCombo: isCombo,
+                          imageUrl: imageUrl,
+                          value: value,
+                          unit: unit,
                         ),
                       );
                 },
@@ -235,9 +228,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 onSubmit: (name, priceDelta, groupId) {
                   context.read<AdminEntitiesBloc>().add(
                         CreateModifier(
-                            groupId: groupId,
-                            name: name,
-                            price: priceDelta),
+                            groupId: groupId, name: name, price: priceDelta),
                       );
                 },
               ),
@@ -254,7 +245,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               builder: (ctx) => ModifierGroupCrudDialog(
                 onSubmit: (name, isRequired, isMultiselect) {
                   context.read<AdminEntitiesBloc>().add(
-                        CreateModifierGroup(name: name, description: ''),
+                        CreateModifierGroup(
+                          name: name,
+                          isRequired: isRequired,
+                          isMultiselect: isMultiselect,
+                        ),
                       );
                 },
               ),
@@ -263,9 +258,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           child: const Icon(Icons.add),
           tooltip: 'Добавить группу модификаторов',
         );
-      case 'cart':
-      case 'orders':
-      case 'users':
       default:
         return const SizedBox.shrink();
     }
@@ -333,12 +325,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       case 'variant':
         return state.variants;
       case 'modifier':
-        return state.modifiers;
+        return state
+            .modifiers; // Теперь это List<modifier_dto.ModifierResponse>
       case 'modifierGroup':
         return state.modifierGroups;
-      case 'cart':
-      case 'orders':
-      case 'users':
       default:
         return [];
     }
@@ -461,6 +451,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           ],
         );
       case 'modifier':
+        // item теперь modifier_dto.ModifierResponse
         return Row(
           children: [
             const Icon(Icons.tune),
@@ -478,39 +469,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: Text(item.name,
-                  style: Theme.of(context).textTheme.titleMedium),
-            ),
-          ],
-        );
-      case 'cart':
-        return Row(
-          children: [
-            const Icon(Icons.shopping_cart),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text('Cart',
-                  style: Theme.of(context).textTheme.titleMedium),
-            ),
-          ],
-        );
-      case 'orders':
-        return Row(
-          children: [
-            const Icon(Icons.receipt_long),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text('Order',
-                  style: Theme.of(context).textTheme.titleMedium),
-            ),
-          ],
-        );
-      case 'users':
-        return Row(
-          children: [
-            const Icon(Icons.people),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text('User',
                   style: Theme.of(context).textTheme.titleMedium),
             ),
           ],
@@ -537,7 +495,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     color: Colors.grey[700],
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Icon(Icons.image, color: Colors.white38, size: 48),
+                  child:
+                      const Icon(Icons.image, color: Colors.white38, size: 48),
                 ),
                 const SizedBox(width: 24),
                 Expanded(
@@ -634,7 +593,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         height: isWide ? 180 : 120,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return const Icon(Icons.error, color: Colors.red, size: 48);
+                          return const Icon(Icons.error,
+                              color: Colors.red, size: 48);
                         },
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
@@ -653,7 +613,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       color: Colors.grey[700],
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Icon(Icons.image, color: Colors.white38, size: 48),
+                    child: const Icon(Icons.image,
+                        color: Colors.white38, size: 48),
                   ),
                 const SizedBox(width: 24),
                 Expanded(
@@ -676,28 +637,30 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
               children: [
                 ElevatedButton.icon(
                   onPressed: () {
                     showDialog(
                       context: context,
                       builder: (ctx) => ProductCrudDialog(
-                        initialCategoryId: item.category.id, // MODIFIED HERE
+                        initialCategoryId: item.category.id,
                         initialName: item.name,
                         initialDescription: item.description,
                         initialSortOrder: item.sortOrder,
                         initialImageUrl: item.imageUrl,
-                        // categories: state.categories, // Передаем текущие категории в диалог
                         onSubmit: (categoryId, name, description, sortOrder,
                             imageUrl) {
                           bloc.add(UpdateProduct(
-                              id: item.id,
-                              categoryId: categoryId,
-                              name: name,
-                              description: description,
-                              sortOrder: sortOrder,
-                              imageUrl: imageUrl));
+                            id: item.id,
+                            categoryId: categoryId,
+                            name: name,
+                            description: description,
+                            sortOrder: sortOrder,
+                            imageUrl: imageUrl,
+                          ));
                         },
                         isEdit: true,
                         onHardDelete: () {
@@ -706,159 +669,42 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       ),
                     );
                   },
-                  label: const Text('Продукты'),
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Редактировать'),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
                 ElevatedButton.icon(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => ProductCrudDialog(
-                        initialCategoryId: item.category.id, // MODIFIED HERE
-                        initialName: item.name,
-                        initialDescription: item.description,
-                        initialSortOrder: item.sortOrder,
-                        initialImageUrl: item.imageUrl,
-                        onSubmit: (categoryId, name, description, sortOrder,
-                            imageUrl) {
-                          bloc.add(UpdateProduct(
-                              id: item.id,
-                              categoryId: categoryId,
-                              name: name,
-                              description: description,
-                              sortOrder: sortOrder,
-                              imageUrl: imageUrl));
-                        },
-                        isEdit: true,
-                        onHardDelete: () {
-                          bloc.add(DeleteProduct(id: item.id, hard: true));
-                        },
-                      ),
-                    );
-                  },
-                  label: const Text('Продукты'),
+                  onPressed: () =>
+                      bloc.add(DeleteProduct(id: item.id, hard: false)),
+                  icon: const Icon(Icons.delete),
+                  label: const Text('Удалить'),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 ),
+                if (item.isDeleted == true)
+                  ElevatedButton.icon(
+                    onPressed: () => bloc.add(RestoreProduct(id: item.id)),
+                    icon: const Icon(Icons.restore),
+                    label: const Text('Восстановить'),
+                  ),
               ],
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => VariantCrudDialog(
-                        initialProductId: item.productId,
-                        initialName: item.name,
-                        initialPrice: item.price,
-                        initialImageUrl: item.imageUrl,
-                        onSubmit: (
-                            {required int productId,
-                            required String name,
-                            required int price,
-                            required String sku,
-                            required bool isAvailable,
-                            required bool isCombo,
-                            String? description,
-                            String? imageUrl,
-                            int? value,
-                            String? unit}) {
-                          bloc.add(UpdateVariant(
-                            id: item.id,
-                            name: name,
-                            price: price,
-                            imageUrl: imageUrl,
-                          ));
-                        },
-                        isEdit: true,
-                      ),
-                    );
-                  },
-                  label: const Text('Варианты продуктов'),
+            if (item.variants.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text('Варианты', style: Theme.of(context).textTheme.titleMedium),
+              ...item.variants.map(
+                (variant) => Padding(
+                  padding: const EdgeInsets.only(left: 16, top: 8),
+                  child: _buildFullItem(
+                    context,
+                    'variant',
+                    variant,
+                    isWide,
+                    state,
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => VariantCrudDialog(
-                        initialProductId: item.productId,
-                        initialName: item.name,
-                        initialPrice: item.price,
-                        initialImageUrl: item.imageUrl,
-                        onSubmit: (
-                            {required int productId,
-                            required String name,
-                            required int price,
-                            required String sku,
-                            required bool isAvailable,
-                            required bool isCombo,
-                            String? description,
-                            String? imageUrl,
-                            int? value,
-                            String? unit}) {
-                          bloc.add(UpdateVariant(
-                            id: item.id,
-                            name: name,
-                            price: price,
-                            imageUrl: imageUrl,
-                          ));
-                        },
-                        isEdit: true,
-                      ),
-                    );
-                  },
-                label: const Text('Варианты продуктов'),
-                ),
-              ],
-            ),
-
-            // Ассоциации с группами модификаторов
-            if (state is AdminEntitiesLoaded)
-              ElevatedButton.icon(
-                onPressed: () {
-                  final allGroups = state.modifierGroups
-                      .map((g) => g.name.toString())
-                      .toList();
-                  final selectedGroups = item.groupNames ?? [];
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AssociationDialog(
-                      allGroups: allGroups,
-                      selectedGroups: selectedGroups,
-                      onSubmit: (selected) {
-                        // Привязка/отвязка групп (пример)
-                        for (final groupName in allGroups) {
-                          final group = state.modifierGroups
-                              .firstWhere((g) => g.name == groupName);
-                          if (selected.contains(groupName) &&
-                              !(selectedGroups.contains(groupName))) {
-                            bloc.add(LinkGroupToVariant(
-                                variantId: item.id, groupId: group.id));
-                          } else if (!selected.contains(groupName) &&
-                              selectedGroups.contains(groupName)) {
-                            bloc.add(UnlinkGroupFromVariant(
-                                variantId: item.id, groupId: group.id));
-                          }
-                        }
-                      },
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.link),
-                label: const Text('Группы модификаторов'),
               ),
             ],
-          );
-        
+          ],
+        );
       case 'variant':
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -888,6 +734,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                           style: Theme.of(context).textTheme.headlineSmall),
                       Text('ID: ${item.id}',
                           style: Theme.of(context).textTheme.bodySmall),
+                      Text('Цена: ${item.price} ₽',
+                          style: Theme.of(context).textTheme.bodySmall),
+                      Text('SKU: ${item.sku}',
+                          style: Theme.of(context).textTheme.bodySmall),
+                      if (item.isCombo)
+                        const Text('Комбо-набор',
+                            style: TextStyle(color: Colors.orange)),
                     ],
                   ),
                 ],
@@ -902,7 +755,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                           initialProductId: item.productId,
                           initialName: item.name,
                           initialPrice: item.price,
+                          initialSku: item.sku,
+                          initialIsAvailable: item.isAvailable,
+                          initialIsCombo: item.isCombo,
                           initialImageUrl: item.imageUrl,
+                          initialValue: item.value?.round(),
+                          initialUnit: item.unit,
                           onSubmit: (
                               {required int productId,
                               required String name,
@@ -919,6 +777,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                               name: name,
                               price: price,
                               imageUrl: imageUrl,
+                              sku: sku,
+                              isAvailable: isAvailable,
+                              isCombo: isCombo,
+                              value: value,
+                              unit: unit,
                             ));
                           },
                           isEdit: true,
@@ -926,8 +789,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       );
                     },
                     icon: const Icon(Icons.edit),
-                    label: const Text(
-                        'Редактировать'), // <-- добавлен параметр label
+                    label: const Text('Редактировать'),
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton.icon(
@@ -950,22 +812,19 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     ),
                 ],
               ),
-
-              // Ассоциации с группами модификаторов
               if (state is AdminEntitiesLoaded)
                 ElevatedButton.icon(
                   onPressed: () {
                     final allGroups = state.modifierGroups
                         .map((g) => g.name.toString())
                         .toList();
-                    final selectedGroups = item.groupNames ?? [];
+                    final selectedGroups = <String>[];
                     showDialog(
                       context: context,
                       builder: (ctx) => AssociationDialog(
                         allGroups: allGroups,
                         selectedGroups: selectedGroups,
                         onSubmit: (selected) {
-                          // Привязка/отвязка групп (пример)
                           for (final groupName in allGroups) {
                             final group = state.modifierGroups
                                 .firstWhere((g) => g.name == groupName);
@@ -986,10 +845,28 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   icon: const Icon(Icons.link),
                   label: const Text('Группы модификаторов'),
                 ),
+              if (item.isCombo == true && state is AdminEntitiesLoaded)
+                ElevatedButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => ComboItemsDialog(
+                        comboVariantId: item.id,
+                        comboVariantName: item.name,
+                        allVariants: List<VariantResponse>.from(state.variants),
+                        onChanged: () => bloc.add(LoadAllEntities()),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.fastfood),
+                  label: const Text('Состав комбо'),
+                ),
             ],
           ),
         );
       case 'modifier':
+        // item имеет тип modifier_dto.ModifierResponse
+        final modifierItem = item as modifier_dto.ModifierResponse;
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Wrap(
@@ -1003,9 +880,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.name,
+                      Text(modifierItem.name,
                           style: Theme.of(context).textTheme.headlineSmall),
-                      Text('ID: ${item.id}',
+                      Text('ID: ${modifierItem.id}',
+                          style: Theme.of(context).textTheme.bodySmall),
+                      Text('Группа ID: ${modifierItem.groupId}',
                           style: Theme.of(context).textTheme.bodySmall),
                     ],
                   ),
@@ -1023,17 +902,18 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                                   .map((g) => {'id': g.id, 'name': g.name})
                                   .toList()
                               : <Map<String, dynamic>>[],
-                          initialGroupId: item.groupId,
+                          initialGroupId: modifierItem.groupId,
                           onSubmit: (name, priceDelta, groupId) {
                             bloc.add(UpdateModifier(
-                                id: item.id,
+                                id: modifierItem.id,
                                 name: name,
                                 price: priceDelta,
                                 groupId: groupId));
                           },
                           isEdit: true,
                           onHardDelete: () {
-                            bloc.add(DeleteModifier(id: item.id, hard: true));
+                            bloc.add(DeleteModifier(
+                                id: modifierItem.id, hard: true));
                           },
                         ),
                       );
@@ -1044,22 +924,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   const SizedBox(width: 12),
                   ElevatedButton.icon(
                     onPressed: () {
-                      bloc.add(DeleteModifier(id: item.id, hard: true));
+                      bloc.add(DeleteModifier(id: modifierItem.id, hard: true));
                     },
                     icon: const Icon(Icons.delete),
                     label: const Text('Удалить'),
                     style:
                         ElevatedButton.styleFrom(backgroundColor: Colors.red),
                   ),
-                  const SizedBox(width: 12),
-                  // if (item.isDeleted == true)
-                  //   ElevatedButton.icon(
-                  //     onPressed: () {
-                  //       bloc.add(RestoreModifier(id: item.id));
-                  //     },
-                  //     icon: const Icon(Icons.restore),
-                  //     label: const Text('Восстановить'),
-                  //   ),
                 ],
               ),
             ],
@@ -1095,10 +966,15 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         context: context,
                         builder: (ctx) => ModifierGroupCrudDialog(
                           initialName: item.name,
+                          initialIsRequired: item.isRequired,
+                          initialIsMultiselect: item.isMultiselect,
                           onSubmit: (name, isRequired, isMultiselect) {
                             bloc.add(UpdateModifierGroup(
-                                id: item.id, name: name, description: ''),
-                              );
+                              id: item.id,
+                              name: name,
+                              isRequired: isRequired,
+                              isMultiselect: isMultiselect,
+                            ));
                           },
                           isEdit: true,
                         ),
@@ -1126,8 +1002,49 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       icon: const Icon(Icons.restore),
                       label: const Text('Восстановить'),
                     ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => ModifierCrudDialog(
+                          groups: state is AdminEntitiesLoaded
+                              ? state.modifierGroups
+                                  .map((g) => {'id': g.id, 'name': g.name})
+                                  .toList()
+                              : <Map<String, dynamic>>[],
+                          initialGroupId: item.id,
+                          onSubmit: (name, priceDelta, groupId) {
+                            bloc.add(CreateModifier(
+                              groupId: groupId,
+                              name: name,
+                              price: priceDelta,
+                            ));
+                          },
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Добавить модификатор'),
+                  ),
                 ],
               ),
+              if (item.modifiers.isNotEmpty) ...[
+                const SizedBox(width: 24),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Модификаторы',
+                        style: Theme.of(context).textTheme.titleMedium),
+                    ...item.modifiers.map(
+                      (modifier) => ListTile(
+                        dense: true,
+                        title: Text(modifier.name),
+                        subtitle: Text('+${modifier.priceDelta} ₽'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         );

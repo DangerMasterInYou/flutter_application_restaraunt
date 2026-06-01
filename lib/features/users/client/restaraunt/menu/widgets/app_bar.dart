@@ -6,7 +6,7 @@ import '/core/router/router.dart';
 
 PreferredSizeWidget buildNarrowAppBar(BuildContext context) {
   final theme = Theme.of(context);
-  
+
   return AppBar(
     automaticallyImplyLeading: true,
     titleSpacing: 0,
@@ -19,11 +19,13 @@ PreferredSizeWidget buildNarrowAppBar(BuildContext context) {
     actions: [
       // Уменьшаем отступы и размеры иконок, чтобы они помещались на узких экранах
       IconButton(
-        padding: const EdgeInsets.symmetric(horizontal: 6), // Уменьшенный отступ
-        constraints: const BoxConstraints(), // Сбрасываем лишние ограничения по размеру
+        padding:
+            const EdgeInsets.symmetric(horizontal: 6), // Уменьшенный отступ
+        constraints:
+            const BoxConstraints(), // Сбрасываем лишние ограничения по размеру
         icon: const Icon(Icons.list, size: 24), // Уменьшенный размер иконки
         onPressed: () {
-          // context.router.push(const OrdersRoute());
+          context.router.push(const OrdersRoute());
         },
         tooltip: 'Заказы',
         hoverColor: Colors.white,
@@ -91,16 +93,17 @@ PreferredSizeWidget buildNarrowAppBar(BuildContext context) {
 
 PreferredSizeWidget buildWideAppBar(BuildContext context) {
   final theme = Theme.of(context);
-  
+
   return AppBar(
     automaticallyImplyLeading: false,
     centerTitle: false,
     titleSpacing: 0,
     leading: Padding(
-      padding: const EdgeInsets.only(left: 10.0), // Add some left padding for the logo
+      padding: const EdgeInsets.only(
+          left: 10.0), // Add some left padding for the logo
       child: SizedBox(
         height: 40, // Adjusted to match icon button visual size
-        width: 40,  // Adjusted to match icon button visual size
+        width: 40, // Adjusted to match icon button visual size
         child: SvgPicture.asset('assets/svg/logo.svg', fit: BoxFit.contain),
       ),
     ),
@@ -131,9 +134,8 @@ PreferredSizeWidget buildWideAppBar(BuildContext context) {
       ],
     ),
     actions: [
-      
       TextButton(
-        onPressed: () {}, 
+        onPressed: () {},
         child: Text('Акции', style: theme.textTheme.titleLarge),
       ),
       const SizedBox(width: 20),
@@ -147,7 +149,7 @@ PreferredSizeWidget buildWideAppBar(BuildContext context) {
       IconButton(
         icon: const Icon(Icons.list),
         onPressed: () {
-          // context.router.push(const OrdersRoute());
+          context.router.push(const OrdersRoute());
         },
         tooltip: 'Заказы',
         hoverColor: Colors.white,

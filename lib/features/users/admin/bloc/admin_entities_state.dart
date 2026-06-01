@@ -7,11 +7,11 @@ class AdminEntitiesInitial extends AdminEntitiesState {}
 class AdminEntitiesLoading extends AdminEntitiesState {}
 
 class AdminEntitiesLoaded extends AdminEntitiesState {
-  final List categories;
-  final List products;
-  final List variants;
-  final List modifiers;
-  final List modifierGroups;
+  final List<CategoryResponse> categories;
+  final List<ProductResponse> products;
+  final List<VariantResponse> variants;
+  final List<modifier_dto.ModifierResponse> modifiers;
+  final List<ModifierGroup> modifierGroups;
   AdminEntitiesLoaded({
     required this.categories,
     required this.products,

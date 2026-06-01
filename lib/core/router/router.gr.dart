@@ -57,6 +57,24 @@ abstract class _$AppRouter extends RootStackRouter {
         child: const MenuScreen(),
       );
     },
+    OrderDetailRoute.name: (routeData) {
+      final pathParams = routeData.inheritedPathParams;
+      final args = routeData.argsAs<OrderDetailRouteArgs>(
+          orElse: () => OrderDetailRouteArgs(orderId: pathParams.getInt('id')));
+      return AutoRoutePage<dynamic>(
+        routeData: routeData,
+        child: OrderDetailScreen(
+          key: args.key,
+          orderId: args.orderId,
+        ),
+      );
+    },
+    OrdersRoute.name: (routeData) {
+      return AutoRoutePage<dynamic>(
+        routeData: routeData,
+        child: const OrdersScreen(),
+      );
+    },
     ProductRoute.name: (routeData) {
       final args = routeData.argsAs<ProductRouteArgs>();
       return AutoRoutePage<dynamic>(
@@ -170,6 +188,59 @@ class MenuRoute extends PageRouteInfo<void> {
         );
 
   static const String name = 'MenuRoute';
+
+  static const PageInfo<void> page = PageInfo<void>(name);
+}
+
+/// generated route for
+/// [OrderDetailScreen]
+class OrderDetailRoute extends PageRouteInfo<OrderDetailRouteArgs> {
+  OrderDetailRoute({
+    Key? key,
+    required int orderId,
+    List<PageRouteInfo>? children,
+  }) : super(
+          OrderDetailRoute.name,
+          args: OrderDetailRouteArgs(
+            key: key,
+            orderId: orderId,
+          ),
+          rawPathParams: {'id': orderId},
+          initialChildren: children,
+        );
+
+  static const String name = 'OrderDetailRoute';
+
+  static const PageInfo<OrderDetailRouteArgs> page =
+      PageInfo<OrderDetailRouteArgs>(name);
+}
+
+class OrderDetailRouteArgs {
+  const OrderDetailRouteArgs({
+    this.key,
+    required this.orderId,
+  });
+
+  final Key? key;
+
+  final int orderId;
+
+  @override
+  String toString() {
+    return 'OrderDetailRouteArgs{key: $key, orderId: $orderId}';
+  }
+}
+
+/// generated route for
+/// [OrdersScreen]
+class OrdersRoute extends PageRouteInfo<void> {
+  const OrdersRoute({List<PageRouteInfo>? children})
+      : super(
+          OrdersRoute.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'OrdersRoute';
 
   static const PageInfo<void> page = PageInfo<void>(name);
 }

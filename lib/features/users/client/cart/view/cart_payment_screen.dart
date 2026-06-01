@@ -1,7 +1,5 @@
-// lib/features/cart/presentation/view/cart_payment_screen.dart
-
+// lib/features/users/client/cart/view/cart_payment_screen.dart
 part of 'cart_screen.dart';
-
 
 @RoutePage()
 class CartPaymentScreen extends StatefulWidget {
@@ -13,8 +11,6 @@ class CartPaymentScreen extends StatefulWidget {
 
 class _CartPaymentScreenState extends State<CartPaymentScreen> {
   String _selectedPaymentMethod = 'cash';
-  
-  // ИСПРАВЛЕНО: Таймер для отслеживания долгой загрузки
   Timer? _loadingTimer;
   bool _showRetryButton = false;
   bool _wasPlacingOrder = false;
@@ -24,15 +20,12 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
     super.initState();
     _startLoadingTimer();
   }
-  
+
   void _startLoadingTimer() {
-    // Сбрасываем предыдущие состояния
     _loadingTimer?.cancel();
     setState(() {
       _showRetryButton = false;
     });
-
-    // Запускаем новый таймер
     _loadingTimer = Timer(const Duration(seconds: 5), () {
       if (mounted) {
         setState(() {
@@ -40,6 +33,15 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
         });
       }
     });
+  }
+
+  void _cancelTimer() {
+    _loadingTimer?.cancel();
+    if (mounted) {
+      setState(() {
+        _showRetryButton = false;
+      });
+    }
   }
 
   @override
@@ -56,52 +58,54 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<CartBloc, CartState>(
+      listenWhen: (previous, current) => previous != current,
       listener: (context, state) {
+        // FIX: Отменяем таймер, когда корзина успешно загружена
         if (state is CartLoaded) {
-          _loadingTimer?.cancel();
-          if (_showRetryButton) {
-            setState(() {
-              _showRetryButton = false;
-            });
-          }
+          _cancelTimer();
+          _wasPlacingOrder = false;
         }
         if (state is CartPlacingOrder) {
           _wasPlacingOrder = true;
         }
         if (state is CartLoadingFailure && _wasPlacingOrder) {
           _wasPlacingOrder = false;
+          // Показываем причину ошибки
+          String errorMsg = state.exception?.toString() ?? 'Неизвестная ошибка';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Ошибка оформления: $errorMsg'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          // Перезагружаем корзину, чтобы вернуться в рабочее состояние
           context.read<CartBloc>().add(const LoadCart());
         }
         if (state is CartOrderPlaced) {
           _wasPlacingOrder = false;
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Заказ #${state.order.id} оформлен')),
+            SnackBar(
+              content: Text('Заказ ${state.order.displayNumber} оформлен'),
+            ),
           );
           context.router.popUntilRoot();
           context.router.replace(const MenuRoute());
         }
-        if (state is CartLoadingFailure && _wasPlacingOrder) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Ошибка: ${state.exception ?? 'не удалось оформить заказ'}',
-              ),
-            ),
-          );
-        }
       },
       builder: (context, state) {
-        // Если идет загрузка или ошибка, но кнопка "Повторить" еще не показана
+        // Если идет оформление заказа – показываем индикатор
         if (state is CartPlacingOrder) {
           return const Center(child: CircularProgressIndicator());
         }
 
+        // Если корзина не загружена и не показана кнопка повтора – ждём
         if (state is! CartLoaded && !_showRetryButton) {
           return const Center(child: CircularProgressIndicator());
         }
-        
-        // Если таймер сработал и нужно показать кнопку "Повторить"
-        if (_showRetryButton) {
+
+        // Если таймер сработал, а корзина всё ещё не загружена – показываем кнопку повтора
+        if (_showRetryButton && state is! CartLoaded) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -118,38 +122,56 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
           );
         }
 
-        // Если все загружено успешно (state is CartLoaded)
+        // Корзина загружена – отображаем форму оплаты
         final cartResponse = (state as CartLoaded).cartResponse;
+        final customerName = state.customerName;
+        final customerPhone = state.customerPhone;
+
+        // FIX: Блокируем кнопку, если контактные данные не заполнены
+        final bool canPlaceOrder = customerName != null &&
+            customerName.trim().isNotEmpty &&
+            customerPhone != null &&
+            customerPhone.trim().isNotEmpty &&
+            cartResponse.items.isNotEmpty;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Способ оплаты', style: Theme.of(context).textTheme.titleLarge),
+              Text('Способ оплаты',
+                  style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 24),
               _buildPaymentMethodSelector(),
               const SizedBox(height: 24),
               _buildOrderSummary(context, cartResponse.totalPrice),
               const SizedBox(height: 24),
+              if (!canPlaceOrder)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    'Заполните контактные данные на предыдущем шаге',
+                    style: TextStyle(color: Colors.orange[300]),
+                  ),
+                ),
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: state is CartPlacingOrder
-                      ? null
-                      : () {
+                  onPressed: canPlaceOrder
+                      ? () {
                           context.read<CartBloc>().add(
                                 PlaceOrder(
-                                  paymentMethod: _selectedPaymentMethod,
-                                ),
+                                    paymentMethod: _selectedPaymentMethod),
                               );
-                        },
+                        }
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
                   ),
-                  child: const Text('Оформить заказ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text('Оформить заказ',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -160,7 +182,6 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
   }
 
   Widget _buildPaymentMethodSelector() {
-    // ... этот код остается без изменений ...
     return Column(
       children: [
         RadioListTile<String>(
@@ -180,14 +201,14 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
   }
 
   Widget _buildOrderSummary(BuildContext context, int totalPrice) {
-    // ... этот код остается без изменений ...
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Информация о заказе', style: Theme.of(context).textTheme.titleMedium),
+            Text('Информация о заказе',
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,8 +222,16 @@ class _CartPaymentScreenState extends State<CartPaymentScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Итого:', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                Text('$totalPrice ₽', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text('Итого:',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
+                Text('$totalPrice ₽',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
           ],

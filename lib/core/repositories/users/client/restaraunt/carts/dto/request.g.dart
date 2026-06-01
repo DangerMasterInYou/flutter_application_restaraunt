@@ -6,6 +6,20 @@ part of 'request.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+AppliedModifierCreateDTO _$AppliedModifierCreateDTOFromJson(
+        Map<String, dynamic> json) =>
+    AppliedModifierCreateDTO(
+      modifierId: (json['modifier_id'] as num).toInt(),
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+    );
+
+Map<String, dynamic> _$AppliedModifierCreateDTOToJson(
+        AppliedModifierCreateDTO instance) =>
+    <String, dynamic>{
+      'modifier_id': instance.modifierId,
+      'quantity': instance.quantity,
+    };
+
 CartItemRequestDTO _$CartItemRequestDTOFromJson(Map<String, dynamic> json) =>
     CartItemRequestDTO(
       productVariantId: (json['product_variant_id'] as num).toInt(),
@@ -22,18 +36,4 @@ Map<String, dynamic> _$CartItemRequestDTOToJson(CartItemRequestDTO instance) =>
       'product_variant_id': instance.productVariantId,
       'quantity': instance.quantity,
       'modifiers': instance.modifiers,
-    };
-
-AppliedModifierCreateDTO _$AppliedModifierCreateDTOFromJson(
-        Map<String, dynamic> json) =>
-    AppliedModifierCreateDTO(
-      modifierId: (json['modifier_id'] as num).toInt(),
-      quantity: (json['quantity'] as num).toInt(),
-    );
-
-Map<String, dynamic> _$AppliedModifierCreateDTOToJson(
-        AppliedModifierCreateDTO instance) =>
-    <String, dynamic>{
-      'modifier_id': instance.modifierId,
-      'quantity': instance.quantity,
     };

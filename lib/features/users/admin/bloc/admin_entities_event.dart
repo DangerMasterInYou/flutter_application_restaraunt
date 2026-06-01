@@ -100,14 +100,26 @@ class CreateVariant extends AdminEntitiesEvent {
   final int productId;
   final String name;
   final int price;
+  final String sku;
+  final bool isAvailable;
+  final bool isCombo;
   final String? imageUrl;
-  const CreateVariant(
-      {required this.productId,
-      required this.name,
-      required this.price,
-      this.imageUrl});
+  final int? value;
+  final String? unit;
+  const CreateVariant({
+    required this.productId,
+    required this.name,
+    required this.price,
+    required this.sku,
+    required this.isAvailable,
+    required this.isCombo,
+    this.imageUrl,
+    this.value,
+    this.unit,
+  });
   @override
-  List<Object?> get props => [productId, name, price, imageUrl];
+  List<Object?> get props =>
+      [productId, name, price, sku, isAvailable, isCombo, imageUrl, value, unit];
 }
 
 class UpdateVariant extends AdminEntitiesEvent {
@@ -115,9 +127,25 @@ class UpdateVariant extends AdminEntitiesEvent {
   final String? name;
   final int? price;
   final String? imageUrl;
-  const UpdateVariant({required this.id, this.name, this.price, this.imageUrl});
+  final String? sku;
+  final bool? isAvailable;
+  final bool? isCombo;
+  final int? value;
+  final String? unit;
+  const UpdateVariant({
+    required this.id,
+    this.name,
+    this.price,
+    this.imageUrl,
+    this.sku,
+    this.isAvailable,
+    this.isCombo,
+    this.value,
+    this.unit,
+  });
   @override
-  List<Object?> get props => [id, name, price, imageUrl];
+  List<Object?> get props =>
+      [id, name, price, imageUrl, sku, isAvailable, isCombo, value, unit];
 }
 
 class DeleteVariant extends AdminEntitiesEvent {
@@ -175,19 +203,30 @@ class RestoreModifier extends AdminEntitiesEvent {
 // Группы модификаторов
 class CreateModifierGroup extends AdminEntitiesEvent {
   final String name;
-  final String description;
-  const CreateModifierGroup({required this.name, required this.description});
+  final bool isRequired;
+  final bool isMultiselect;
+  const CreateModifierGroup({
+    required this.name,
+    required this.isRequired,
+    required this.isMultiselect,
+  });
   @override
-  List<Object?> get props => [name, description];
+  List<Object?> get props => [name, isRequired, isMultiselect];
 }
 
 class UpdateModifierGroup extends AdminEntitiesEvent {
   final int id;
   final String? name;
-  final String? description;
-  const UpdateModifierGroup({required this.id, this.name, this.description});
+  final bool? isRequired;
+  final bool? isMultiselect;
+  const UpdateModifierGroup({
+    required this.id,
+    this.name,
+    this.isRequired,
+    this.isMultiselect,
+  });
   @override
-  List<Object?> get props => [id, name, description];
+  List<Object?> get props => [id, name, isRequired, isMultiselect];
 }
 
 class DeleteModifierGroup extends AdminEntitiesEvent {

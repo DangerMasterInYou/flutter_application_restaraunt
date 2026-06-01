@@ -109,6 +109,9 @@ void main() async {
       () =>
           ModifierGroupAssociationRepository(dio: dio, apiSiteUrl: apiSiteUrl),
     );
+    GetIt.I.registerLazySingleton<AbstractComboItemsRepository>(
+      () => ComboItemsRepository(dio: dio, apiSiteUrl: apiSiteUrl),
+    );
 
     GetIt.I.registerSingleton<AbstractLoginRepository>(
       LoginRepository(

@@ -1,46 +1,65 @@
-// part of 'orders_bloc.dart';
+part of 'orders_bloc.dart';
 
-// abstract class OrdersState extends Equatable {}
+abstract class OrdersState extends Equatable {
+  const OrdersState();
 
-// class OrdersInitial extends OrdersState {
-//   @override
-//   List<Object?> get props => [];
-// }
+  @override
+  List<Object?> get props => [];
+}
 
-// class OrdersLoading extends OrdersState {
-//   @override
-//   List<Object?> get props => [];
-// }
+class OrdersInitial extends OrdersState {
+  const OrdersInitial();
+}
 
-// class OrdersLoaded extends OrdersState {
-//   OrdersLoaded({
-//     required this.ordersList,
-//   });
+class OrdersLoading extends OrdersState {
+  const OrdersLoading();
+}
 
-//   final List<Order> ordersList;
+class OrdersLoaded extends OrdersState {
+  const OrdersLoaded({required this.ordersList});
 
-//   @override
-//   List<Object?> get props => [ordersList];
-// }
+  final List<OrderResponseDTO> ordersList;
 
-// class OrdersLoadingFailure extends OrdersState {
-//   OrdersLoadingFailure({
-//     this.exception,
-//   });
+  @override
+  List<Object?> get props => [ordersList];
+}
 
-//   final Object? exception;
+class OrdersLoadingFailure extends OrdersState {
+  const OrdersLoadingFailure({this.exception});
 
-//   @override
-//   List<Object?> get props => [exception];
-// }
+  final Object? exception;
 
-// class OrdersWebSocketFailure extends OrdersState {
-//   OrdersWebSocketFailure({
-//     this.exception,
-//   });
+  @override
+  List<Object?> get props => [exception];
+}
 
-//   final Object? exception;
+class OrdersDetailLoading extends OrdersState {
+  const OrdersDetailLoading({this.ordersList = const []});
 
-//   @override
-//   List<Object?> get props => [exception];
-// }
+  final List<OrderResponseDTO> ordersList;
+
+  @override
+  List<Object?> get props => [ordersList];
+}
+
+class OrdersDetailLoaded extends OrdersState {
+  const OrdersDetailLoaded({required this.order});
+
+  final OrderResponseDTO order;
+
+  @override
+  List<Object?> get props => [order];
+}
+
+class OrdersDetailFailure extends OrdersState {
+  const OrdersDetailFailure({
+    required this.ordersList,
+    this.exception,
+  });
+
+  final List<OrderResponseDTO> ordersList;
+  final Object? exception;
+
+  @override
+  List<Object?> get props => [ordersList, exception];
+}

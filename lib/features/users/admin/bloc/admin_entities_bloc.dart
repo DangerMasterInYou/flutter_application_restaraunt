@@ -2,6 +2,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_application_restaraunt/core/repositories/users/admin/restaraunt/product_full/product_full.dart';
 import 'package:get_it/get_it.dart';
+import '/core/repositories/users/admin/restaraunt/product_full/modifier_full/modifier/dto/response.dart'
+    as modifier_dto;
 
 part 'admin_entities_state.dart';
 part 'admin_entities_event.dart';
@@ -221,9 +223,12 @@ class AdminEntitiesBloc extends Bloc<AdminEntitiesEvent, AdminEntitiesState> {
           name: event.name,
           price: event.price,
           productId: event.productId,
-          sku: '',
-          isAvailable: true,
-          isCombo: false,
+          sku: event.sku,
+          isAvailable: event.isAvailable,
+          isCombo: event.isCombo,
+          imageUrl: event.imageUrl,
+          value: event.value,
+          unit: event.unit,
         ),
         event.productId,
       );
@@ -245,6 +250,11 @@ class AdminEntitiesBloc extends Bloc<AdminEntitiesEvent, AdminEntitiesState> {
           name: event.name,
           price: event.price,
           imageUrl: event.imageUrl,
+          sku: event.sku,
+          isAvailable: event.isAvailable,
+          isCombo: event.isCombo,
+          value: event.value,
+          unit: event.unit,
         ),
       );
       emit(AdminEntityOperationSuccess());
@@ -356,8 +366,8 @@ class AdminEntitiesBloc extends Bloc<AdminEntitiesEvent, AdminEntitiesState> {
       await modifierGroupRepository.postCreateModifierGroup(
         ModifierGroupCreateDTO(
           name: event.name,
-          isRequired: false,
-          isMultiselect: false,
+          isRequired: event.isRequired,
+          isMultiselect: event.isMultiselect,
         ),
       );
       emit(AdminEntityOperationSuccess());
@@ -376,8 +386,8 @@ class AdminEntitiesBloc extends Bloc<AdminEntitiesEvent, AdminEntitiesState> {
         event.id,
         ModifierGroupPatchDTO(
           name: event.name,
-          isRequired: null,
-          isMultiselect: null,
+          isRequired: event.isRequired,
+          isMultiselect: event.isMultiselect,
         ),
       );
       emit(AdminEntityOperationSuccess());

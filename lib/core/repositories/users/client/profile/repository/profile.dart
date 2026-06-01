@@ -94,7 +94,7 @@ class ProfileRepository implements AbstractProfileRepository {
           sendTimeout: const Duration(seconds: 5),
         ),
       );
-      if (response.statusCode != 204 || response.statusCode != 200) {
+      if (response.statusCode != 204 && response.statusCode != 200) {
         // Успешное удаление часто возвращает 204 No Content
         throw DioException(
           requestOptions: response.requestOptions,

@@ -5,3 +5,4 @@ export 'variant_crud_dialog.dart';
 export 'modifier_crud_dialog.dart';
 export 'modifier_group_crud_dialog.dart';
 export 'association_dialog.dart';
+export 'combo_items_dialog.dart';

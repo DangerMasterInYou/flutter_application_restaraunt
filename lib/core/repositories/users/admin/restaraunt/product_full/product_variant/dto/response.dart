@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import '/api_config.dart';
 
 part 'response.g.dart';
 
@@ -47,6 +48,13 @@ class VariantResponse {
 
   @JsonKey(name: 'is_combo')
   final bool isCombo;
+
+  String? get fullImageUrl {
+    if (imageUrl == null || imageUrl!.isEmpty) return null;
+    final url = imageUrl!;
+    if (url.startsWith('http')) return url;
+    return '${ApiConfig.apiSiteUrl}/$url';
+  }
 
   factory VariantResponse.fromJson(Map<String, dynamic> json) =>
       _$VariantResponseFromJson(json);
